@@ -18,8 +18,8 @@ async function run() {
 
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
-  });
+    max: 100, // limit each IP to 100 requests per windowMs
+  })
 
   mongoConnect()
   RedisCache.connect()
@@ -31,6 +31,7 @@ async function run() {
     .use(helmet())
     .use(logger('dev'))
     .use(express.json())
+    .use(express.urlencoded({ extended: true }))
     .use(limiter)
     .use('/', server)
     .use(notFound)

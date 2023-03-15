@@ -1,9 +1,8 @@
 import { errorRes } from './response.js'
 import { readOne } from '../services/mongodb/crud.js'
 import User from '../domains/user/user.model.js'
-import { validateToken } from '../domains/auth/utils/jwt.js'
+import { decodeToken, validateToken } from '../domains/auth/utils/jwt.js'
 import { JwtTokenType } from '../domains/auth/constants.js'
-import RedisCache from '../services/redis/index.js'
 
 export function notFound(req, res, _) {
   return errorRes(res, 'you are lost.', 404)
@@ -27,23 +26,28 @@ export function unauthorized(req, res) {
 
 export const isAuthorized = async function (req, res, next) {
   try {
-    const token = req.get('Authorization')
-    if (!token) {
+    const bearerToken = req.get('Authorization')
+    if (!bearerToken) {
       return unauthorized(req, res)
     }
-    const validToken = await validateToken({
-      token: token.replace('Bearer ', ''),
+
+    const token = bearerToken.replace('Bearer ', '')
+    const isValid = await validateToken({
+      token,
       type: JwtTokenType.ACCESS,
     })
-    if (!validToken) {
+    if (!isValid) {
       return unauthorized(req, res)
     }
-    
+
+    const decodedToken = await decodeToken({ token, type: JwtTokenType.ACCESS })
+
     req.user = {
-      id: validToken.sub,
-      email: validToken.email,
-      name: validToken.name,
+      id: decodedToken.sub,
+      email: decodedToken.email,
+      name: decodedToken.name,
     }
+
     return next()
   } catch (err) {
     return unauthorized(req, res)

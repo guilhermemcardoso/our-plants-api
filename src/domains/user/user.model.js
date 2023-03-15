@@ -9,7 +9,7 @@ export const userSchema = new Schema({
   last_name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  profile_image_url: { type: String, required: false },
+  profile_image: { type: Buffer, required: false },
   bio: { type: String, required: false },
   address: {
     street_name: { type: String, required: false },

@@ -25,7 +25,6 @@ export async function decodeToken({ token, type }) {
   try {
     const secretOrPrivateKey = process.env[`JWT_${type}_SECRET`]
     const decoded = jwt.verify(token, secretOrPrivateKey)
-
     return decoded
   } catch (err) {
     throw new InternalServerError('Internal Error.')
