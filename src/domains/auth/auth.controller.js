@@ -1,6 +1,10 @@
 import express from 'express'
+import {
+  registerValidation,
+  registerValidationRules,
+} from '../../common/middlewares/validation.js'
 
-import { notFound } from '../../common/middleware.js'
+import { notFound } from '../../common/response.js'
 import { successRes, errorRes } from '../../common/response.js'
 import BaseError from '../../error/base.error.js'
 import MailService from '../mail/mail.service.js'
@@ -10,7 +14,7 @@ import { JwtTokenType } from './constants.js'
 const router = express.Router()
 
 router
-  .post('/register', register)
+  .post('/register', registerValidationRules(), registerValidation, register)
   .get('/email-confirmation', emailConfirmation)
   .post('/login', login)
   .get('/forgot-password', forgotPassword)

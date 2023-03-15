@@ -1,12 +1,8 @@
-import { errorRes } from './response.js'
-import { readOne } from '../services/mongodb/crud.js'
-import User from '../domains/user/user.model.js'
-import { decodeToken, validateToken } from '../domains/auth/utils/jwt.js'
-import { JwtTokenType } from '../domains/auth/constants.js'
-
-export function notFound(req, res, _) {
-  return errorRes(res, 'you are lost.', 404)
-}
+import { errorRes } from '../response.js'
+import { readOne } from '../../services/mongodb/crud.js'
+import User from '../../domains/user/user.model.js'
+import { decodeToken, validateToken } from '../../domains/auth/utils/jwt.js'
+import { JwtTokenType } from '../../domains/auth/constants.js'
 
 export async function onlyAdmin(req, res, next) {
   const { user_id } = req.query
@@ -14,21 +10,16 @@ export async function onlyAdmin(req, res, next) {
     const user = await readOne(User, { user_id })
     if (user && user.level >= 10) return next()
   } catch (error) {
-    return unauthorized(req, res)
+    return errorRes(res, 'Unauthorized.', 401)
   }
-  return unauthorized(req, res)
-}
-
-export function unauthorized(req, res) {
-  const errMsg = 'Unauthorized.'
-  return errorRes(res, errMsg, 401)
+  return errorRes(res, 'Unauthorized.', 401)
 }
 
 export const isAuthorized = async function (req, res, next) {
   try {
     const bearerToken = req.get('Authorization')
     if (!bearerToken) {
-      return unauthorized(req, res)
+      return errorRes(res, 'Unauthorized.', 401)
     }
 
     const token = bearerToken.replace('Bearer ', '')
@@ -37,7 +28,7 @@ export const isAuthorized = async function (req, res, next) {
       type: JwtTokenType.ACCESS,
     })
     if (!isValid) {
-      return unauthorized(req, res)
+      return errorRes(res, 'Unauthorized.', 401)
     }
 
     const decodedToken = await decodeToken({ token, type: JwtTokenType.ACCESS })
@@ -50,6 +41,6 @@ export const isAuthorized = async function (req, res, next) {
 
     return next()
   } catch (err) {
-    return unauthorized(req, res)
+    return errorRes(res, 'Unauthorized.', 401)
   }
 }

@@ -4,7 +4,7 @@ import complaint from './domains/complaint/complaint.controller.js'
 import plant from './domains/plant/plant.controller.js'
 import specie from './domains/specie/specie.controller.js'
 import user from './domains/user/user.controller.js'
-import { notFound } from './common/middleware.js'
+import { notFound } from './common/response.js'
 
 const router = express.Router()
 

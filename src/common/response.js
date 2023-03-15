@@ -1,8 +1,4 @@
-export function errorRes(
-  res,
-  errMsg = 'failed operation',
-  statusCode = 500
-) {
+export function errorRes(res, errMsg = 'failed operation', statusCode = 500) {
   return res.status(statusCode).json({ error: true, message: errMsg })
 }
 
@@ -15,4 +11,8 @@ export function errData(res, errMsg = 'failed operation') {
     if (err) return errorRes(res, err, errMsg)
     return successRes(res, data)
   }
+}
+
+export function notFound(req, res, _) {
+  return errorRes(res, 'You are lost.', 404)
 }

@@ -1,7 +1,7 @@
 import express from 'express'
 
 import { create, read, update, remove } from '../../services/mongodb/crud.js'
-import { notFound } from '../../common/middleware.js'
+import { notFound } from '../../common/response.js'
 import Plant from './plant.model.js'
 import { successRes, errorRes } from '../../common/response.js'
 
