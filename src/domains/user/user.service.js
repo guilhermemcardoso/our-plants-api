@@ -8,7 +8,9 @@ import {
   readOne,
   remove,
 } from '../../services/mongodb/crud.js'
+import { JwtTokenType } from '../auth/constants.js'
 import { encryptPassword, checkPassword } from '../auth/utils/crypt.js'
+import { removeJwt } from '../auth/utils/jwt.js'
 import User from './user.model.js'
 
 export default class UserService {
@@ -97,6 +99,11 @@ export default class UserService {
     const userWithoutPassword = { ...user.toObject() }
     delete userWithoutPassword.password
     return userWithoutPassword
+  }
+
+  static async deleteAccount({ id, email, token }) {
+    await remove(User, { _id: id })
+    removeJwt({ token, type: JwtTokenType.ACCESS, value: email })
   }
 
   static async removeProfileImage(id) {

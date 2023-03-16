@@ -15,8 +15,9 @@ const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
 
 router
-  .get('/:id', isAuthorized, getUserById)
   .get('/me', isAuthorized, getCurrentUser)
+  .get('/:id', isAuthorized, getUserById)
+  .delete('/me', isAuthorized, deleteAccount)
   .patch('/me', isAuthorized, updateCurrentUser)
   .patch(
     '/me/change-password',
@@ -78,6 +79,24 @@ async function removeProfileImage(req, res) {
     return errorRes(res, 'Bad Request.', 400)
   }
   return errorRes(res, null, 404)
+}
+
+async function deleteAccount(req, res) {
+  try {
+    const {
+      user: { id, email },
+      token,
+    } = req
+
+    await UserService.deleteAccount({ id, email, token })
+
+    return successRes(res, { message: 'Account deleted successfully' }, 200)
+  } catch (error) {
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
+  }
 }
 
 async function changePassword(req, res) {

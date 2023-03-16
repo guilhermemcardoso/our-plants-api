@@ -30,7 +30,6 @@ export const isAuthorized = async function (req, res, next) {
     if (!isValid) {
       return errorRes(res, 'Unauthorized.', 401)
     }
-
     const decodedToken = await decodeToken({ token, type: JwtTokenType.ACCESS })
 
     req.user = {
@@ -39,6 +38,7 @@ export const isAuthorized = async function (req, res, next) {
       name: decodedToken.name,
     }
 
+    req.token = token
     return next()
   } catch (err) {
     return errorRes(res, 'Unauthorized.', 401)
