@@ -1,9 +1,9 @@
 import express from 'express'
 
 import { create, read, update, remove, readOne } from '../../services/mongodb/crud.js'
-import { notFound } from '../../common/response.js'
+import { notFound } from '../../common/responses.js'
 import Complaint from './complaint.model.js'
-import { successRes, errorRes } from '../../common/response.js'
+import { successRes, errorRes } from '../../common/responses.js'
 
 const router = express.Router()
 

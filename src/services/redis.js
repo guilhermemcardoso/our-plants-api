@@ -1,5 +1,5 @@
 import redis from 'redis'
-import InternalServerError from '../../error/internal-server.error.js'
+import InternalServerError from '../error/internal-server.error.js'
 
 export default class RedisCache {
   static getInstance() {

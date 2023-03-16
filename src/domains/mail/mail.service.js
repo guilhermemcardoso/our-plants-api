@@ -2,8 +2,7 @@ import nodemailer from 'nodemailer'
 import handlebars from 'handlebars'
 import { readTemplate } from './utils.js'
 import { EmailTemplates } from './constants.js'
-import { generateJwt } from '../auth/utils/jwt.js'
-import { JwtTokenType } from '../auth/constants.js'
+import { generateJwt, JwtTokenType } from '../../services/jwt.js'
 
 export default class MailService {
   static getInstance() {

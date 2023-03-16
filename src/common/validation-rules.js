@@ -1,5 +1,5 @@
 import { body, validationResult } from 'express-validator'
-import { errorRes } from './response.js'
+import { errorRes } from './responses.js'
 import { passwordRegex } from './regex.js'
 
 export const Fields = {

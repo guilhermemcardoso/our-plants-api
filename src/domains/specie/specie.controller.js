@@ -1,6 +1,6 @@
 import express from 'express'
 import { create, read, update, readOne } from '../../services/mongodb/crud.js'
-import { successRes, errorRes, notFound } from '../../common/response.js'
+import { successRes, errorRes, notFound } from '../../common/responses.js'
 import Specie from './specie.model.js'
 
 const router = express.Router()

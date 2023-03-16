@@ -1,11 +1,11 @@
 import express from 'express'
 import multer from 'multer'
-import { isAuthorized } from '../../common/middlewares/authorization.js'
-import { successRes, errorRes, notFound } from '../../common/response.js'
+import { isAuthorized } from '../../common/middlewares.js'
+import { successRes, errorRes, notFound } from '../../common/responses.js'
 import {
   newPasswordValidationRules,
   validation,
-} from '../../common/validations-rules.js'
+} from '../../common/validation-rules.js'
 import BaseError from '../../error/base.error.js'
 import UserService from './user.service.js'
 import { removeForbiddenUserFields } from './utils/validations.js'

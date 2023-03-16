@@ -1,8 +1,7 @@
-import { errorRes } from '../response.js'
-import { readOne } from '../../services/mongodb/crud.js'
-import User from '../../domains/user/user.model.js'
-import { decodeToken, validateToken } from '../../domains/auth/utils/jwt.js'
-import { JwtTokenType } from '../../domains/auth/constants.js'
+import { errorRes } from './responses.js'
+import { readOne } from '../services/mongodb/crud.js'
+import User from '../domains/user/user.model.js'
+import { JwtTokenType, decodeToken, validateToken } from '../services/jwt.js'
 
 export async function onlyAdmin(req, res, next) {
   const { user_id } = req.query

@@ -10,13 +10,13 @@ import ConflictError from '../../error/conflict.error.js'
 import BadRequestError from '../../error/bad-request.error.js'
 import UnauthorizedError from '../../error/unauthorized.error.js'
 import {
+  JwtTokenType,
   decodeToken,
   generateJwt,
   removeJwt,
   validateToken,
-} from './utils/jwt.js'
-import { checkPassword, encryptPassword } from './utils/crypt.js'
-import { JwtTokenType } from './constants.js'
+} from '../../services/jwt.js'
+import { checkPassword, encryptPassword } from '../../services/crypt.js'
 
 export default class AuthService {
   static async register({ userData }) {

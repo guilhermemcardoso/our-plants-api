@@ -8,9 +8,11 @@ import {
   readOne,
   remove,
 } from '../../services/mongodb/crud.js'
-import { JwtTokenType } from '../auth/constants.js'
-import { encryptPassword, checkPassword } from '../auth/utils/crypt.js'
-import { removeJwt } from '../auth/utils/jwt.js'
+import {
+  encryptPassword,
+  checkPassword,
+} from '../../services/crypt.js'
+import { removeJwt, JwtTokenType, } from '../../services/jwt.js'
 import User from './user.model.js'
 
 export default class UserService {

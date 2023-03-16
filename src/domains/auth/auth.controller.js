@@ -1,17 +1,17 @@
 import express from 'express'
 
-import { notFound } from '../../common/response.js'
-import { successRes, errorRes } from '../../common/response.js'
+import { notFound } from '../../common/responses.js'
+import { successRes, errorRes } from '../../common/responses.js'
 import {
   emailAndPasswordValidationRules,
   passwordValidationRules,
   validation,
-} from '../../common/validations-rules.js'
+} from '../../common/validation-rules.js'
 import BaseError from '../../error/base.error.js'
 import MailService from '../mail/mail.service.js'
 import UserService from '../user/user.service.js'
 import AuthService from './auth.service.js'
-import { JwtTokenType } from './constants.js'
+import { JwtTokenType } from '../../services/jwt.js'
 const router = express.Router()
 
 router
