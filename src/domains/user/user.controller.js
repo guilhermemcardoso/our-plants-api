@@ -2,6 +2,10 @@ import express from 'express'
 import multer from 'multer'
 import { isAuthorized } from '../../common/middlewares/authorization.js'
 import { successRes, errorRes, notFound } from '../../common/response.js'
+import {
+  newPasswordValidationRules,
+  validation,
+} from '../../common/validations-rules.js'
 import BaseError from '../../error/base.error.js'
 import UserService from './user.service.js'
 import { removeForbiddenUserFields } from './utils/validations.js'
@@ -14,7 +18,13 @@ router
   .get('/:id', isAuthorized, getUserById)
   .get('/me', isAuthorized, getCurrentUser)
   .patch('/me', isAuthorized, updateCurrentUser)
-  .patch('/me/change-password', isAuthorized, changePassword)
+  .patch(
+    '/me/change-password',
+    isAuthorized,
+    newPasswordValidationRules(),
+    validation,
+    changePassword
+  )
   .patch(
     '/me/profile-image',
     isAuthorized,
@@ -62,7 +72,6 @@ async function removeProfileImage(req, res) {
       return successRes(res, user, 200)
     }
   } catch (error) {
-    console.log('ERRO', error)
     if (error instanceof BaseError) {
       return errorRes(res, error.name, error.statusCode)
     }
@@ -91,7 +100,6 @@ async function changePassword(req, res) {
       return successRes(res, user, 200)
     }
   } catch (error) {
-    console.log('error', error)
     if (error instanceof BaseError) {
       return errorRes(res, error.name, error.statusCode)
     }

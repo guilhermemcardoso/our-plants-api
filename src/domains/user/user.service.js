@@ -63,7 +63,6 @@ export default class UserService {
   static async changePassword({ id, newPassword, oldPassword }) {
     const currentUser = await UserService.getUserById(id, true)
     if (!currentUser) {
-      console.log('usuario nao existe')
       throw new BadRequestError('Bad request.')
     }
 
@@ -73,7 +72,6 @@ export default class UserService {
     })
 
     if (!passwordIsValid) {
-      console.log('senha incorreta')
       throw new BadRequestError('Bad request.')
     }
 

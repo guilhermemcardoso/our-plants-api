@@ -1,11 +1,12 @@
 import express from 'express'
-import {
-  registerValidation,
-  registerValidationRules,
-} from '../../common/middlewares/validation.js'
 
 import { notFound } from '../../common/response.js'
 import { successRes, errorRes } from '../../common/response.js'
+import {
+  emailAndPasswordValidationRules,
+  passwordValidationRules,
+  validation,
+} from '../../common/validations-rules.js'
 import BaseError from '../../error/base.error.js'
 import MailService from '../mail/mail.service.js'
 import UserService from '../user/user.service.js'
@@ -14,11 +15,21 @@ import { JwtTokenType } from './constants.js'
 const router = express.Router()
 
 router
-  .post('/register', registerValidationRules(), registerValidation, register)
+  .post('/register', emailAndPasswordValidationRules(), validation, register)
   .get('/email-confirmation', emailConfirmation)
-  .post('/login', login)
-  .get('/forgot-password', forgotPassword)
-  .post('/recovery-password', recoveryPassword)
+  .post('/login', emailAndPasswordValidationRules(), validation, login)
+  .get(
+    '/forgot-password',
+    passwordValidationRules(),
+    validation,
+    forgotPassword
+  )
+  .post(
+    '/recovery-password',
+    emailAndPasswordValidationRules(),
+    validation,
+    recoveryPassword
+  )
   .post('/refresh-token', refreshToken)
   .use(notFound)
 

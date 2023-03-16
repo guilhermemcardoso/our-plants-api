@@ -52,7 +52,6 @@ export async function generateJwt({ payload, type, cachedValue }) {
 
     return token
   } catch (err) {
-    console.log('PORQUE', err)
     throw new InternalServerError('Internal Error.')
   }
 }
