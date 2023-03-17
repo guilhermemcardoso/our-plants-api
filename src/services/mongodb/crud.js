@@ -14,9 +14,9 @@ export function create(model, item) {
   }
 }
 
-export function read(model, query = {}) {
+export function read(model, query = {}, limit, skip) {
   try {
-    const result = model.find(query)
+    const result = model.find(query).limit(limit).skip(skip)
     return result
   } catch (err) {
     throw new BadRequestError('Bad request.')

@@ -16,18 +16,19 @@ router
   .use(notFound)
 
 async function createPlant(req, res) {
-  const { user_id } = req.query
-  const item = req.body
-  item.created_by = user_id
   try {
-    const plant = await create(Plant, item)
-    if (plant) {
-      return successRes(res, plant, 200)
-    }
+    const {
+      user: { id },
+    } = req
+    const item = req.body
+    const plant = await PlantService.create({ item, userId: id })
+    return successRes(res, { plant }, 201)
   } catch (error) {
-    return errorRes(res, null, 400)
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
   }
-  return errorRes(res, null, 404)
 }
 
 async function updatePlant(req, res) {

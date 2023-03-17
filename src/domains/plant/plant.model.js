@@ -23,7 +23,8 @@ export const plantSchema = new Schema({
   status: {
     type: String,
     enum: ['active', 'deleted', 'reported'],
-    required: false,
+    required: true,
+    default: 'active'
   },
   updated_at: { type: Date, default: Date.now },
   created_at: { type: Date, default: Date.now },

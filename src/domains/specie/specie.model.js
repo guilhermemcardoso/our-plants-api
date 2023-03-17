@@ -11,7 +11,8 @@ export const specieSchema = new Schema({
   icon_url: { type: String, required: false },
   updated_at: { type: Date, default: Date.now },
   created_at: { type: Date, default: Date.now },
-  deleted: { type: Boolean, default: false, required: true },
+  deleted: { type: Boolean, default: false },
+  editable: { type: Boolean, default: true },
 })
 
 export default mongoose.model('Specie', specieSchema, 'species')
