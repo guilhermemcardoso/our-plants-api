@@ -1,18 +1,23 @@
 import express from 'express'
 
-import { create, read, update, remove } from '../../services/mongodb/crud.js'
 import { notFound } from '../../common/responses.js'
-import Plant from './plant.model.js'
 import { successRes, errorRes } from '../../common/responses.js'
+import { isAdmin, isAuthorized } from '../../common/middlewares.js'
+import { removeForbiddenPlantFields } from './utils/validations.js'
+import PlantService from './plant.service.js'
+import BaseError from '../../error/base.error.js'
 
 const router = express.Router()
 
 router
-  .get('/list/:lng/:lat/', listNearBy)
-  .post('/', createPlant)
-  .put('/:_id', updatePlant)
+  .post('/', isAuthorized, createPlant)
+  .get('/list', isAuthorized, getPlantsNearBy)
+  .get('/:id', isAuthorized, getPlantById)
+  .patch('/:id', isAuthorized, updatePlant)
+  .delete('/:id', isAdmin, removePlant)
   .get('/:_id', getPlantById)
   .delete('/:_id', removePlant)
+  .post('/:id', isAdmin, lockPlant)
   .use(notFound)
 
 async function createPlant(req, res) {
@@ -32,69 +37,84 @@ async function createPlant(req, res) {
 }
 
 async function updatePlant(req, res) {
-  const { _id } = req.params
-  const item = req.body
-  item.updated_at = new Date()
   try {
-    const plant = await update(Plant, _id, item)
-    if (plant) {
-      return successRes(res, plant, 200)
-    }
+    const {
+      user: { id: userId },
+    } = req
+    const { id } = req.params
+    const item = removeForbiddenPlantFields(req.body)
+
+    const plant = await PlantService.update({ id, item, userId })
+    return successRes(res, { plant }, 200)
   } catch (error) {
-    return errorRes(res, null, 400)
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
   }
-  return errorRes(res, null, 404)
+}
+
+async function lockPlant(req, res) {
+  try {
+    const {
+      user: { id: userId },
+    } = req
+    const { id } = req.params
+    const { locked } = req.body
+
+    const plant = await PlantService.lock({ id, locked, userId })
+    return successRes(res, { plant }, 200)
+  } catch (error) {
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
+  }
 }
 
 async function removePlant(req, res) {
-  const { _id } = req.params
+  const { id } = req.params
   try {
-    const plant = await update(Plant, _id, { status: 'deleted' })
-    if (plant) {
-      return successRes(res, plant, 200)
-    }
+    await PlantService.remove(id)
+
+    return successRes(res, { message: 'Plant deleted successfully.' }, 200)
   } catch (error) {
-    return errorRes(res, null, 400)
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
   }
-  return errorRes(res, null, 404)
 }
 
 async function getPlantById(req, res) {
-  const { _id } = req.params
+  const { id } = req.params
   try {
-    const plant = await readOne(Plant, { _id })
+    const plant = await PlantService.getPlantById(id)
     if (plant) {
       return successRes(res, plant, 200)
     }
   } catch (error) {
-    return errorRes(res, null, 400)
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
   }
   return errorRes(res, null, 404)
 }
-async function listNearBy(req, res) {
-  const { distance } = req.query
-  const { lng, lat } = req.params
+
+async function getPlantsNearBy(req, res) {
   try {
-    const plants = await read(Plant, {
-      status: { $ne: 'deleted' },
-      location: {
-        $near: {
-          $maxDistance: distance,
-          $geometry: {
-            type: 'Point',
-            coordinates: [lng, lat],
-          },
-        },
-      },
+    const { latitude, longitude, distance } = req.body
+    const plants = await PlantService.getPlantsNearBy({
+      latitude,
+      longitude,
+      distance,
     })
-    if (plants) {
-      return successRes(res, plants, 200)
-    }
+
+    return successRes(res, plants, 200)
   } catch (error) {
     return errorRes(res, 'Bad request.', 400)
   }
-
-  return successRes(res, [], 200)
 }
 
 export default router

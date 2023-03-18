@@ -53,7 +53,7 @@ export default class SpecieService {
       updated_at: new Date(),
     }
 
-    const updatedSpecie = await update(Specie, { _id: id }, data)
+    await update(Specie, { _id: id }, data)
   }
 
   static async lock({ id, locked, userId }) {
@@ -87,12 +87,13 @@ export default class SpecieService {
   }
 
   static async getSpecies({ page, items }) {
-    const species = await read(
-      Specie,
-      { deleted: false },
-      items,
-      (page - 1) * items
-    )
+    const species = await read({
+      model: Specie,
+      query: { deleted: false },
+      limit: items,
+      skip: (page - 1) * items,
+      populate: 'created_by',
+    })
 
     return species
   }

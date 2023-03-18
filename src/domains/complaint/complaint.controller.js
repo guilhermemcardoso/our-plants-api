@@ -1,88 +1,134 @@
 import express from 'express'
 
-import { create, read, update, remove, readOne } from '../../services/mongodb/crud.js'
 import { notFound } from '../../common/responses.js'
-import Complaint from './complaint.model.js'
 import { successRes, errorRes } from '../../common/responses.js'
+import { isAdmin, isAuthorized } from '../../common/middlewares.js'
+import { ITEMS_PER_PAGE } from '../../common/constants.js'
+import BaseError from '../../error/base.error.js'
+import ComplaintService from './complaint.service.js'
 
 const router = express.Router()
 
 export default router
-  .get('/list', list)
-  .post('/', createComplaint)
-  .put('/:_id', updateComplaint)
-  .get('/:_id', getComplaintById)
-  .delete('/:_id', removeComplaint)
+  .post('/', isAuthorized, createComplaint)
+  .get('/list', isAuthorized, getComplaints)
+  .get('/my-complaints', isAuthorized, getMyComplaints)
+  .get('/:id', isAuthorized, getComplaintById)
+  .delete('/:id', isAuthorized, removeComplaint)
+  .post('/:id', isAdmin, evaluateComplaint)
   .use(notFound)
 
 async function createComplaint(req, res) {
-  const { user_id } = req.query
-  const item = req.body
-  item.created_by = user_id
   try {
-    const complaint = await create(Complaint, item)
-    if (complaint) {
-      return successRes(res, complaint, 200)
-    }
+    const {
+      user: { id },
+    } = req
+    const item = req.body
+    const complaint = await ComplaintService.create({ item, userId: id })
+    return successRes(res, { complaint }, 201)
   } catch (error) {
-    return errorRes(res, null, 400)
-  }
-  return errorRes(res, null, 404)
-}
-
-async function updateComplaint(req, res) {
-  const { _id } = req.params
-  const item = req.body
-  item.updated_at = new Date()
-  try {
-    const complaint = await update(Complaint, _id, item)
-    if (complaint) {
-      return successRes(res, complaint, 200)
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
     }
-  } catch (error) {
-    return errorRes(res, null, 400)
+    return errorRes(res, 'Bad Request.', 400)
   }
-  return errorRes(res, null, 404)
 }
 
 async function removeComplaint(req, res) {
-  const { _id } = req.params
   try {
-    const complaint = await update(Complaint, _id, { status: 'deleted' })
-    if (complaint) {
-      return successRes(res, complaint, 200)
-    }
+    const { id } = req.params
+    const {
+      user: { id: userId },
+    } = req
+    await ComplaintService.remove({ id, userId })
+
+    return successRes(res, { message: 'Complaint deleted successfully.' }, 200)
   } catch (error) {
-    return errorRes(res, null, 400)
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
   }
-  return errorRes(res, null, 404)
 }
 
 async function getComplaintById(req, res) {
-  const { _id } = req.params
+  const { id } = req.params
   try {
-    const complaint = await readOne(Complaint, { _id })
+    const complaint = await ComplaintService.getComplaintById(id)
     if (complaint) {
       return successRes(res, complaint, 200)
     }
   } catch (error) {
-    return errorRes(res, null, 400)
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
   }
   return errorRes(res, null, 404)
 }
 
-async function list(req, res) {
-  const { page, items } = req.query
+async function getComplaints(req, res) {
   try {
-    const complaints = await read(Complaint, {
-      limit: items,
-      skip: (page - 1) * items,
+    const {
+      user: { id: userId },
+    } = req
+    const { page, items, open, closed } = req.query
+    const complaints = await ComplaintService.getComplaints({
+      userId,
+      page: page || 1,
+      items: items || ITEMS_PER_PAGE,
+      open,
+      closed,
     })
-    if (complaints) {
-      return successRes(res, complaints, 200)
-    }
+    return successRes(res, complaints || [], 200)
   } catch (error) {
-    return errorRes(res, null, 400)
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
   }
-  return successRes(res, [], 200)
+}
+
+async function getMyComplaints(req, res) {
+  try {
+    const {
+      user: { id: userId },
+    } = req
+    const { page, items, open, closed } = req.query
+    const complaints = await ComplaintService.getMyComplaints({
+      userId,
+      page: page || 1,
+      items: items || ITEMS_PER_PAGE,
+      open,
+      closed,
+    })
+    return successRes(res, complaints || [], 200)
+  } catch (error) {
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
+  }
+}
+
+async function evaluateComplaint(req, res) {
+  try {
+    const { id } = req.params
+    const {
+      user: { id: userId },
+    } = req
+    const { evaluation } = req.body
+    const complaint = await ComplaintService.evaluateComplaint({
+      id,
+      userId,
+      evaluation,
+    })
+
+    return successRes(res, { complaint }, 200)
+  } catch (error) {
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
+  }
 }

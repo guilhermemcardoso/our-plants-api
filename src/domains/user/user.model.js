@@ -30,4 +30,4 @@ export const userSchema = new Schema({
   confirmed_email: { type: Boolean, required: true, default: false },
 })
 
-export default mongoose.model('User', userSchema, 'users')
+export default mongoose.model('User', userSchema)

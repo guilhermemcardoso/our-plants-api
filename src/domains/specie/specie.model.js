@@ -7,7 +7,7 @@ export const specieSchema = new Schema({
   _id: ObjectId,
   popular_name: { type: String, required: true },
   scientific_name: { type: String, required: false },
-  created_by: { type: String, required: true },
+  created_by: { type: ObjectId, ref:'User' },
   icon_url: { type: String, required: false },
   updated_at: { type: Date, default: Date.now },
   created_at: { type: Date, default: Date.now },
@@ -15,4 +15,4 @@ export const specieSchema = new Schema({
   editable: { type: Boolean, default: true },
 })
 
-export default mongoose.model('Specie', specieSchema, 'species')
+export default mongoose.model('Specie', specieSchema)

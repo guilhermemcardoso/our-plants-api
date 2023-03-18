@@ -18,18 +18,15 @@ export const plantSchema = new Schema({
     },
   },
   images: { type: [String], required: false },
-  created_by: { type: String, required: true },
+  created_by: { type: ObjectId, required: true, ref: 'User' },
   specie_id: { type: ObjectId, ref: 'Specie', required: true },
-  status: {
-    type: String,
-    enum: ['active', 'deleted', 'reported'],
-    required: true,
-    default: 'active'
-  },
+  reported: { type: Boolean, default: false },
+  deleted: { type: Boolean, default: false },
+  editable: { type: Boolean, default: true },
   updated_at: { type: Date, default: Date.now },
   created_at: { type: Date, default: Date.now },
 })
 
 plantSchema.index({ location: '2dsphere' })
 
-export default mongoose.model('Plant', plantSchema, 'plants')
+export default mongoose.model('Plant', plantSchema)
