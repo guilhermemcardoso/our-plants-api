@@ -1,10 +1,3 @@
-import {
-  create,
-  read,
-  update,
-  readOne,
-  remove,
-} from '../../services/mongodb/crud.js'
 import User from '../user/user.model.js'
 import ConflictError from '../../error/conflict.error.js'
 import BadRequestError from '../../error/bad-request.error.js'
@@ -25,14 +18,14 @@ export default class AuthService {
       password: await encryptPassword(userData.password),
     }
 
-    const alreadyExists = await readOne(User, { email: userData.email })
+    const alreadyExists = await User.getByEmail({ email: userData.email })
 
     if (alreadyExists) {
       throw new ConflictError('Email already registered.')
     }
 
-    const user = await create(User, data)
-    const userWithoutPassword = { ...user.toObject() }
+    const user = await User.create(data)
+    const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
     return userWithoutPassword
   }
@@ -43,8 +36,11 @@ export default class AuthService {
       throw new BadRequestError('Bad request.')
     }
     const { email } = await decodeToken({ token, type })
-    const user = await update(User, { email }, { confirmed_email: true })
-    const userWithoutPassword = { ...user.toObject() }
+    const user = await User.updateByEmail({
+      email,
+      data: { confirmed_email: true },
+    })
+    const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
     removeJwt({ token, type })
 
@@ -52,7 +48,10 @@ export default class AuthService {
   }
 
   static async login({ email, password }) {
-    const user = await readOne(User, { email: email, confirmed_email: true })
+    const user = await User.getByEmail({
+      email,
+      filters: { confirmed_email: true },
+    })
     if (!user) {
       throw new UnauthorizedError('Unauthorized.')
     }
@@ -84,7 +83,7 @@ export default class AuthService {
       cachedValue: accessToken,
     })
 
-    const userWithoutPassword = { ...user.toObject() }
+    const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
 
     return {
@@ -104,13 +103,12 @@ export default class AuthService {
       throw new BadRequestError('Bad request.')
     }
 
-    const user = await update(
-      User,
-      { email },
-      { password: await encryptPassword(password) }
-    )
+    const user = await User.updateByEmail({
+      email,
+      data: { password: await encryptPassword(password) },
+    })
 
-    const userWithoutPassword = { ...user.toObject() }
+    const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
 
     removeJwt({ token, type: JwtTokenType.PASSWORD_RECOVERY })
@@ -144,8 +142,12 @@ export default class AuthService {
       cachedValue: newAccessToken,
     })
 
-    await removeJwt({ token: oldToken, type: JwtTokenType.ACCESS})
-    await removeJwt({ token: refreshToken, type: JwtTokenType.REFRESH, value: oldToken})
+    await removeJwt({ token: oldToken, type: JwtTokenType.ACCESS })
+    await removeJwt({
+      token: refreshToken,
+      type: JwtTokenType.REFRESH,
+      value: oldToken,
+    })
 
     return {
       access_token: newAccessToken,

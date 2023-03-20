@@ -33,7 +33,7 @@ export default class MailService {
     const token = await generateJwt({
       payload: confirmEmailPayload,
       type: JwtTokenType.EMAIL_CONFIRMATION,
-      cachedValue: user.email
+      cachedValue: user.email,
     })
 
     const url = `${process.env.MAIL_LINK_URL}:${process.env.PORT}/auth/email-confirmation?token=${token}`
@@ -72,7 +72,7 @@ export default class MailService {
     const token = await generateJwt({
       payload: recoveryPasswordPayload,
       type: JwtTokenType.PASSWORD_RECOVERY,
-      cachedValue: user.email
+      cachedValue: user.email,
     })
 
     const url = `${process.env.MAIL_LINK_URL}:${process.env.PORT}/auth/recovery-password?token=${token}&email=${user.email}`

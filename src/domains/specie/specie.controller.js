@@ -101,10 +101,10 @@ async function getSpecieById(req, res) {
 
 async function getSpecies(req, res) {
   try {
-    const { page, items } = req.query
+    const { page, perPage } = req.query
     const species = await SpecieService.getSpecies({
       page: page || 1,
-      items: items || ITEMS_PER_PAGE,
+      perPage: perPage || ITEMS_PER_PAGE,
     })
     return successRes(res, species || [], 200)
   } catch (error) {

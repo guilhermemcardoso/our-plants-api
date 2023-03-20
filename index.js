@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 import rateLimit from 'express-rate-limit'
 import server from './src/server.js'
 import { notFound } from './src/common/responses.js'
-import { connect as mongoConnect } from './src/services/mongodb/connection.js'
+import { connect as mongoConnect } from './src/services/mongodb.js'
 import RedisCache from './src/services/redis.js'
 
 async function run() {

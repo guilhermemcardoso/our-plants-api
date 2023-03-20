@@ -72,11 +72,11 @@ async function getComplaints(req, res) {
     const {
       user: { id: userId },
     } = req
-    const { page, items, open, closed } = req.query
+    const { page, perPage, open, closed } = req.query
     const complaints = await ComplaintService.getComplaints({
       userId,
       page: page || 1,
-      items: items || ITEMS_PER_PAGE,
+      perPage: perPage || ITEMS_PER_PAGE,
       open,
       closed,
     })

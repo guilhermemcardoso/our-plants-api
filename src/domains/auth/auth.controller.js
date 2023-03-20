@@ -18,12 +18,7 @@ router
   .post('/register', emailAndPasswordValidationRules(), validation, register)
   .get('/email-confirmation', emailConfirmation)
   .post('/login', emailAndPasswordValidationRules(), validation, login)
-  .get(
-    '/forgot-password',
-    passwordValidationRules(),
-    validation,
-    forgotPassword
-  )
+  .get('/forgot-password', forgotPassword)
   .post(
     '/recovery-password',
     emailAndPasswordValidationRules(),

@@ -1,7 +1,8 @@
 import mongoose from 'mongoose'
+import BadRequestError from '../../error/bad-request.error.js'
 
 const Schema = mongoose.Schema
-const ObjectId = Schema.Types.ObjectId
+const ObjectId = mongoose.Types.ObjectId
 
 export const userSchema = new Schema({
   _id: ObjectId,
@@ -30,4 +31,101 @@ export const userSchema = new Schema({
   confirmed_email: { type: Boolean, required: true, default: false },
 })
 
-export default mongoose.model('User', userSchema)
+export const UserModel = mongoose.model('User', userSchema)
+
+export default class User {
+  static async create(data) {
+    try {
+      const newData = await new UserModel({
+        _id: new ObjectId(),
+        ...data,
+      }).save()
+
+      return newData.toObject()
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async removeById({ id }) {
+    try {
+      await UserModel.deleteOne({ _id: id })
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async getById({ id }) {
+    try {
+      const result = await UserModel.findOne({ _id: id }).lean()
+      return result
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async getByEmail({ email, filters }) {
+    try {
+      const result = await UserModel.findOne({ email, ...filters }).lean()
+      return result
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async updateById({ id, data }) {
+    try {
+      const updatedData = await UserModel.findOneAndUpdate({ _id: id }, data, {
+        new: true,
+      })
+      return updatedData
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async updateByEmail({ email, data }) {
+    try {
+      const updatedData = await UserModel.findOneAndUpdate({ email }, data, {
+        new: true,
+      })
+      return updatedData
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async count(filters) {
+    try {
+      const count = await UserModel.countDocuments(filters)
+      return count
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async list({ page, perPage, filters }) {
+    try {
+      const result = await UserModel.find(filters)
+        .limit(perPage)
+        .skip((page - 1) * perPage)
+        .lean()
+
+      const count = await UserModel.countDocuments({
+        created_by: { $ne: new ObjectId(userId) },
+        ...filters,
+      })
+
+      const hasNext = (page - 1) * perPage + result.length > count
+      return {
+        items: result,
+        total_items: count,
+        page,
+        hasNext,
+        hasPrevious: page > 1,
+      }
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+}

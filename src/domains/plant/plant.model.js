@@ -1,7 +1,10 @@
 import mongoose from 'mongoose'
+import BadRequestError from '../../error/bad-request.error.js'
+import { SpecieModel } from '../specie/specie.model.js'
+import { UserModel } from '../user/user.model.js'
 
 const Schema = mongoose.Schema
-const ObjectId = Schema.Types.ObjectId
+const ObjectId = mongoose.Types.ObjectId
 
 export const plantSchema = new Schema({
   _id: ObjectId,
@@ -18,8 +21,8 @@ export const plantSchema = new Schema({
     },
   },
   images: { type: [String], required: false },
-  created_by: { type: ObjectId, required: true, ref: 'User' },
-  specie_id: { type: ObjectId, ref: 'Specie', required: true },
+  created_by: { type: ObjectId, required: true, ref: UserModel },
+  specie_id: { type: ObjectId, ref: SpecieModel, required: true },
   reported: { type: Boolean, default: false },
   deleted: { type: Boolean, default: false },
   editable: { type: Boolean, default: true },
@@ -29,4 +32,120 @@ export const plantSchema = new Schema({
 
 plantSchema.index({ location: '2dsphere' })
 
-export default mongoose.model('Plant', plantSchema)
+export const PlantModel = mongoose.model('Plant', plantSchema)
+
+export default class Plant {
+  static async create(data) {
+    try {
+      const newData = await new PlantModel({
+        _id: new ObjectId(),
+        ...data,
+      }).save()
+
+      return newData.toObject()
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async getById({ id, deleted }) {
+    try {
+      const filters = {}
+      if (deleted !== undefined) {
+        filters.deleted = deleted
+      }
+      const result = await PlantModel.findOne({ _id: id, ...filters }).populate(
+        'created_by'
+      )
+      return result
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async updateById({ id, data }) {
+    try {
+      const updatedData = await PlantModel.findOneAndUpdate({ _id: id }, data, {
+        new: true,
+      }).populate('created_by')
+      return updatedData
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async removeById({ id }) {
+    try {
+      const updatedData = await PlantModel.findOneAndUpdate(
+        { _id: id },
+        { deleted: true, updated_at: new Date() },
+        {
+          new: true,
+        }
+      )
+      return updatedData
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async count(filters) {
+    try {
+      const count = await PlantModel.countDocuments(filters)
+      return count
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async list({ page, perPage, filters }) {
+    try {
+      const result = await PlantModel.find(filters)
+        .limit(perPage)
+        .skip((page - 1) * perPage)
+        .populate('created_by')
+        .lean()
+
+      const count = await PlantModel.countDocuments(filters)
+
+      const hasNext = (page - 1) * perPage + result.length > count
+      return {
+        items: result,
+        total_items: count,
+        page,
+        hasNext,
+        hasPrevious: page > 1,
+      }
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async getNearBy({ latitude, longitude, distance, filters }) {
+    try {
+      const result = await PlantModel.find({
+        location: {
+          $near: {
+            $maxDistance: distance,
+            $geometry: {
+              type: 'Point',
+              coordinates: [latitude, longitude],
+            },
+          },
+        },
+        ...filters,
+      })
+        .populate('created_by')
+        .lean()
+
+      const count = await PlantModel.countDocuments(filters)
+
+      return {
+        items: result,
+        total_items: count,
+      }
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+}

@@ -6,6 +6,7 @@ import { isAdmin, isAuthorized } from '../../common/middlewares.js'
 import { removeForbiddenPlantFields } from './utils/validations.js'
 import PlantService from './plant.service.js'
 import BaseError from '../../error/base.error.js'
+import BadRequestError from '../../error/bad-request.error.js'
 
 const router = express.Router()
 
@@ -113,7 +114,10 @@ async function getPlantsNearBy(req, res) {
 
     return successRes(res, plants, 200)
   } catch (error) {
-    return errorRes(res, 'Bad request.', 400)
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad Request.', 400)
   }
 }
 

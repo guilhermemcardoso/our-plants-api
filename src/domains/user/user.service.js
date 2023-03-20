@@ -1,18 +1,8 @@
 import * as bcrypt from 'bcrypt'
 import BadRequestError from '../../error/bad-request.error.js'
 import NotFoundError from '../../error/not-found.error.js'
-import {
-  create,
-  read,
-  update,
-  readOne,
-  remove,
-} from '../../services/mongodb/crud.js'
-import {
-  encryptPassword,
-  checkPassword,
-} from '../../services/crypt.js'
-import { removeJwt, JwtTokenType, } from '../../services/jwt.js'
+import { encryptPassword, checkPassword } from '../../services/crypt.js'
+import { removeJwt, JwtTokenType } from '../../services/jwt.js'
 import User from './user.model.js'
 
 export default class UserService {
@@ -22,7 +12,7 @@ export default class UserService {
       password: await bcrypt.hash(userData.password, 10),
     }
 
-    const user = await create(User, data)
+    const user = await User.create(data)
 
     return {
       ...user,
@@ -31,7 +21,7 @@ export default class UserService {
   }
 
   static async getUserById(id, showPassword = false) {
-    const user = await readOne(User, { _id: id })
+    const user = await User.getById({ id })
     if (!user) {
       throw new NotFoundError('Not found.')
     }
@@ -40,26 +30,26 @@ export default class UserService {
       return user
     }
 
-    const userWithoutPassword = { ...user.toObject() }
+    const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
     return userWithoutPassword
   }
 
   static async getUserByEmail(email) {
-    const user = await readOne(User, { email })
-    const userWithoutPassword = { ...user.toObject() }
+    const user = await User.getByEmail({ email })
+    const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
     return userWithoutPassword
   }
 
   static async updateUser({ id, values }) {
-    const item = { ...values }
-    item.updated_at = new Date()
-    const user = await update(User, { _id: id }, item)
+    const data = { ...values }
+    data.updated_at = new Date()
+    const user = await User.updateById({ id, data })
     if (!user) {
       throw new NotFoundError('Not found.')
     }
-    const userWithoutPassword = { ...user.toObject() }
+    const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
     return userWithoutPassword
   }
@@ -80,52 +70,45 @@ export default class UserService {
     }
 
     const password = await encryptPassword(newPassword)
-    const item = { password }
-    item.updated_at = new Date()
-    const user = await update(User, { _id: id }, item)
+    const data = { password }
+    data.updated_at = new Date()
+    const user = await User.updateById({ id, data })
     if (!user) {
       throw new NotFoundError('Not found.')
     }
-    const userWithoutPassword = { ...user.toObject() }
+    const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
     return userWithoutPassword
   }
 
   static async updateProfileImage({ id, imageBuffer }) {
-    const item = { profile_image: imageBuffer }
-    item.updated_at = new Date()
-    const user = await update(User, { _id: id }, item)
+    const data = { profile_image: imageBuffer }
+    data.updated_at = new Date()
+    const user = await User.updateById({ id, data })
     if (!user) {
       throw new NotFoundError('Not found.')
     }
-    const userWithoutPassword = { ...user.toObject() }
+    const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
     return userWithoutPassword
   }
 
   static async deleteAccount({ id, email, token }) {
-    await remove(User, { _id: id })
+    await User.removeById({ id })
     removeJwt({ token, type: JwtTokenType.ACCESS, value: email })
   }
 
   static async removeProfileImage(id) {
-    let user = await update(
-      User,
-      { _id: id },
-      { $unset: { profile_image: '' } }
-    )
+    const user = await User.updateById({
+      id,
+      data: { $unset: { profile_image: '' }, $set: { updated_at: new Date() } },
+    })
 
     if (!user) {
       throw new NotFoundError('Not found.')
     }
 
-    user = await update(User, { _id: id }, { updated_at: new Date() })
-
-    if (!user) {
-      throw new NotFoundError('Not found.')
-    }
-
-    const userWithoutPassword = { ...user.toObject() }
+    const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
     return userWithoutPassword
   }

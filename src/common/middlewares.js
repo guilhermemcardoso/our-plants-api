@@ -1,5 +1,4 @@
 import { errorRes } from './responses.js'
-import { readOne } from '../services/mongodb/crud.js'
 import User from '../domains/user/user.model.js'
 import { JwtTokenType, decodeToken, validateToken } from '../services/jwt.js'
 import { ADMIN_LEVEL } from './constants.js'
@@ -22,7 +21,7 @@ export const isAdmin = async function (req, res, next) {
 
     const decodedToken = await decodeToken({ token, type: JwtTokenType.ACCESS })
 
-    const user = await readOne(User, { _id: decodedToken.sub })
+    const user = await User.getById({ id: decodedToken.sub })
 
     if (!user || user.level < ADMIN_LEVEL) {
       return errorRes(res, 'Unauthorized.', 401)

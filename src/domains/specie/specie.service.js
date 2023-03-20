@@ -1,7 +1,6 @@
 import BadRequestError from '../../error/bad-request.error.js'
 import NotFoundError from '../../error/not-found.error.js'
 import UnauthorizedError from '../../error/unauthorized.error.js'
-import { create, read, update, readOne } from '../../services/mongodb/crud.js'
 import Specie from './specie.model.js'
 import User from '../user/user.model.js'
 import { ADMIN_LEVEL } from '../../common/constants.js'
@@ -13,14 +12,14 @@ export default class SpecieService {
       created_by: userId,
     }
 
-    const specie = await create(Specie, data)
+    const specie = await Specie.create(data)
 
     return specie
   }
 
   static async update({ id, item, userId }) {
-    const specie = await readOne(Specie, { _id: id })
-    const user = await readOne(User, { _id: userId })
+    const specie = await Specie.getById({ id, deleted: false })
+    const user = await User.getById({ id: userId })
 
     if (!specie || !user) {
       throw new BadRequestError('Bad request.')
@@ -42,23 +41,18 @@ export default class SpecieService {
       updated_at: new Date(),
     }
 
-    const updatedSpecie = await update(Specie, { _id: id }, data)
+    const updatedSpecie = await Specie.updateById({ id, data })
 
     return updatedSpecie
   }
 
   static async remove(id) {
-    const data = {
-      deleted: true,
-      updated_at: new Date(),
-    }
-
-    await update(Specie, { _id: id }, data)
+    await Specie.removeById({ id })
   }
 
   static async lock({ id, locked, userId }) {
-    const specie = await readOne(Specie, { _id: id })
-    const user = await readOne(User, { _id: userId })
+    const specie = await Specie.getById({ id })
+    const user = await User.getById({ id: userId })
 
     if (!specie || !user) {
       throw new BadRequestError('Bad request.')
@@ -69,30 +63,28 @@ export default class SpecieService {
       updated_at: new Date(),
     }
 
-    const updatedSpecie = await update(Specie, { _id: id }, data)
+    const updatedSpecie = await Specie.updateById({ id, data })
 
     return updatedSpecie
   }
 
   static async getSpecieById(id) {
-    const specie = await readOne(Specie, { _id: id, deleted: false })
+    const specie = await Specie.getById({ id, deleted: false })
     if (!specie) {
       throw new NotFoundError('Not found.')
     }
 
-    const formattedSpecie = { ...specie.toObject() }
+    const formattedSpecie = { ...specie }
     delete formattedSpecie.deleted
     delete formattedSpecie.editable
     return formattedSpecie
   }
 
-  static async getSpecies({ page, items }) {
-    const species = await read({
-      model: Specie,
-      query: { deleted: false },
-      limit: items,
-      skip: (page - 1) * items,
-      populate: 'created_by',
+  static async getSpecies({ page, perPage }) {
+    const species = await Specie.list({
+      page,
+      perPage,
+      filters: { deleted: false },
     })
 
     return species

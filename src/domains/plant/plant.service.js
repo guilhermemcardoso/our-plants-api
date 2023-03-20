@@ -1,12 +1,5 @@
 import BadRequestError from '../../error/bad-request.error.js'
 import NotFoundError from '../../error/not-found.error.js'
-import {
-  create,
-  read,
-  update,
-  readOne,
-  remove,
-} from '../../services/mongodb/crud.js'
 import Plant from './plant.model.js'
 import User from '../user/user.model.js'
 import { ADMIN_LEVEL } from '../../common/constants.js'
@@ -18,14 +11,14 @@ export default class PlantService {
       created_by: userId,
     }
 
-    const plant = await create(Plant, data)
+    const plant = await Plant.create(data)
 
     return plant
   }
 
   static async update({ id, item, userId }) {
-    const plant = await readOne(Plant, { _id: id })
-    const user = await readOne(User, { _id: userId })
+    const plant = await Plant.getById({ id, deleted: false })
+    const user = await User.getById({ id: userId })
 
     if (!plant || !user) {
       throw new BadRequestError('Bad request.')
@@ -47,23 +40,18 @@ export default class PlantService {
       updated_at: new Date(),
     }
 
-    const updatedPlant = await update(Plant, { _id: id }, data)
+    const updatedPlant = await Plant.updateById({ id, data })
 
     return updatedPlant
   }
 
   static async remove(id) {
-    const data = {
-      deleted: true,
-      updated_at: new Date(),
-    }
-
-    await update(Plant, { _id: id }, data)
+    await Plant.removeById({ id })
   }
 
   static async lock({ id, locked, userId }) {
-    const plant = await readOne(Plant, { _id: id })
-    const user = await readOne(User, { _id: userId })
+    const plant = await Plant.getById({ id })
+    const user = await User.getById({ id: userId })
 
     if (!plant || !user) {
       throw new BadRequestError('Bad request.')
@@ -74,13 +62,13 @@ export default class PlantService {
       updated_at: new Date(),
     }
 
-    const updatedPlant = await update(Plant, { _id: id }, data)
+    const updatedPlant = await Plant.updateById({ id, data })
 
     return updatedPlant
   }
 
   static async getPlantById(id) {
-    const plant = await readOne(Plant, { _id: id, deleted: false })
+    const plant = await Plant.getById({ id, deleted: false })
     if (!plant) {
       throw new NotFoundError('Not found.')
     }
@@ -92,23 +80,11 @@ export default class PlantService {
   }
 
   static async getPlantsNearBy({ latitude, longitude, distance }) {
-    const plants = await read({
-      model: Plant,
-      query: {
-        deleted: false,
-        location: {
-          $near: {
-            $maxDistance: distance,
-            $geometry: {
-              type: 'Point',
-              coordinates: [latitude, longitude],
-            },
-          },
-        },
-      },
-      limit: null,
-      skip: null,
-      populate: 'created_by specie_id',
+    const plants = await Plant.getNearBy({
+      latitude,
+      longitude,
+      distance,
+      filters: { deleted: false },
     })
 
     return plants || []

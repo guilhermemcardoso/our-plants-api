@@ -1,18 +1,13 @@
 import BadRequestError from '../../error/bad-request.error.js'
 import NotFoundError from '../../error/not-found.error.js'
 import UnauthorizedError from '../../error/unauthorized.error.js'
-import { create, read, update, readOne } from '../../services/mongodb/crud.js'
 import Complaint from './complaint.model.js'
 import Plant from '../plant/plant.model.js'
 import User from '../user/user.model.js'
 
-import mongoose from 'mongoose'
-
-const ObjectId = mongoose.Types.ObjectId
-
 export default class ComplaintService {
   static async create({ item, userId }) {
-    const plant = await readOne(Plant, { _id: item.plant_id })
+    const plant = await Plant.getById({ id: item.plant_id, deleted: false })
 
     if (!plant) {
       throw new BadRequestError('Bad request.')
@@ -23,25 +18,32 @@ export default class ComplaintService {
       created_by: userId,
     }
 
-    const complaint = await create(Complaint, data)
-    await update(Plant, { _id: plant._id }, { reported: true })
+    const complaint = await Complaint.create(data)
+    await Plant.updateById({ id: plant._id, data: { reported: true } })
 
     return complaint
   }
 
   static async remove({ id, userId }) {
-    const complaint = await readOne(Complaint, { _id: id })
-    const user = await readOne(User, { _id: userId })
+    const complaint = await Complaint.getById({
+      id,
+      deleted: false,
+      closed: false,
+    })
+    const user = await User.getById({ id: userId })
 
     if (!complaint || !user) {
       throw new BadRequestError('Bad request.')
     }
 
-    if (userId === complaint.created_by.toString()) {
+    if (userId !== complaint.created_by) {
       throw new UnauthorizedError('Unauthorized.')
     }
 
-    const plant = await readOne(Plant, { _id: complaint.plant_id })
+    const plant = await Plant.getById({
+      id: complaint.plant_id,
+      deleted: false,
+    })
 
     if (!plant) {
       throw new BadRequestError('Bad request.')
@@ -52,32 +54,29 @@ export default class ComplaintService {
       updated_at: new Date(),
     }
 
-    await update(Complaint, { _id: id }, data)
+    await Complaint.updateById({ id, data })
 
-    const plantComplaints = await read({
-      model: Complaint,
-      query: { plant_id: plant._id, closed: false, deleted: false },
-      limit: null,
-      skip: null,
-      populate: '',
+    const plantComplaints = await Complaint.count({
+      plant_id: plant._id,
+      closed: false,
+      deleted: false,
     })
 
-    if (plantComplaints.length === 0) {
-      await update(Plant, { _id: plant._id }, { reported: false })
+    if (plantComplaints === 0) {
+      await Plant.updateById({ id: plant._id, reported: false })
     }
   }
 
   static async getComplaintById(id) {
-    const complaint = await readOne(Complaint, { _id: id, deleted: false })
+    const complaint = await Complaint.getById({ id })
     if (!complaint) {
       throw new NotFoundError('Not found.')
     }
 
-    const formattedComplaint = { ...complaint.toObject() }
-    return formattedComplaint
+    return complaint
   }
 
-  static async getComplaints({ userId, page, items, open, closed }) {
+  static async getComplaints({ userId, page, perPage, open, closed }) {
     let closedQuery = null
     if (!open && !closed) {
       return []
@@ -89,22 +88,17 @@ export default class ComplaintService {
       closedQuery = { closed: true }
     }
 
-    const complaints = await read({
-      model: Complaint,
-      query: {
-        deleted: false,
-        created_by: { $ne: new ObjectId(userId) },
-        ...closedQuery,
-      },
-      limit: items,
-      skip: (page - 1) * items,
-      populate: 'created_by evaluator_id',
-    })
+    const filters = {
+      deleted: false,
+      ...closedQuery,
+    }
+
+    const complaints = await Complaint.list({ userId, page, perPage, filters })
 
     return complaints
   }
 
-  static async getMyComplaints({ userId, page, items, closed, open }) {
+  static async getMyComplaints({ userId, page, perPage, closed, open }) {
     let closedQuery = null
     if (!open && !closed) {
       return []
@@ -115,30 +109,38 @@ export default class ComplaintService {
     if (!open && closed) {
       closedQuery = { closed: true }
     }
-    const complaints = await read({
-      model: Complaint,
-      query: {
-        deleted: false,
-        created_by: new ObjectId(userId),
-        ...closedQuery,
-      },
-      limit: items,
-      skip: (page - 1) * items,
-      populate: 'created_by',
+
+    const filters = {
+      deleted: false,
+      ...closedQuery,
+    }
+
+    const complaints = await Complaint.myList({
+      userId,
+      page,
+      perPage,
+      filters,
     })
 
     return complaints
   }
 
   static async evaluateComplaint({ id, userId, evaluation }) {
-    const complaint = await readOne(Complaint, { _id: id })
-    const user = await readOne(User, { _id: userId })
+    const complaint = await Complaint.getById({
+      id,
+      deleted: false,
+      closed: false,
+    })
+    const user = await User.getById({ id: userId })
 
     if (!complaint || !user || complaint.created_by === userId) {
       throw new BadRequestError('Bad request.')
     }
 
-    const plant = await readOne(Plant, { _id: complaint.plant_id })
+    const plant = await Plant.getById({
+      id: complaint.plant_id,
+      deleted: false,
+    })
 
     if (!plant) {
       throw new BadRequestError('Bad request.')
@@ -146,23 +148,21 @@ export default class ComplaintService {
 
     const data = {
       evaluation,
-      evaluator_id: userId,
+      evaluated_by: userId,
       closed: true,
       updated_at: new Date(),
     }
 
-    const updatedComplaint = await update(Complaint, { _id: id }, data)
+    const updatedComplaint = await Complaint.updateById({ id, data })
 
-    const plantComplaints = await read({
-      model: Complaint,
-      query: { plant_id: plant._id, closed: false, deleted: false },
-      limit: null,
-      skip: null,
-      populate: '',
+    const plantComplaints = await Complaint.count({
+      plant_id: plant._id,
+      closed: false,
+      deleted: false,
     })
 
-    if (plantComplaints.length === 0) {
-      await update(Plant, { _id: plant._id }, { reported: false })
+    if (plantComplaints === 0) {
+      await Plant.updateById({ id: plant._id, reported: false })
     }
 
     return updatedComplaint
