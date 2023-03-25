@@ -36,7 +36,8 @@ export default class ComplaintService {
       throw new BadRequestError('Bad request.')
     }
 
-    if (userId !== complaint.created_by) {
+    const { _id: authorId } = complaint.created_by
+    if (userId !== authorId.toString()) {
       throw new UnauthorizedError('Unauthorized.')
     }
 
@@ -133,7 +134,8 @@ export default class ComplaintService {
     })
     const user = await User.getById({ id: userId })
 
-    if (!complaint || !user || complaint.created_by === userId) {
+    const { _id: authorId } = complaint.created_by
+    if (!complaint || !user || userId === authorId.toString()) {
       throw new BadRequestError('Bad request.')
     }
 
