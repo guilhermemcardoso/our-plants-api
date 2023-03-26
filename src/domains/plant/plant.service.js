@@ -1,5 +1,6 @@
 import BadRequestError from '../../error/bad-request.error.js'
 import NotFoundError from '../../error/not-found.error.js'
+import UnauthorizedError from '../../error/unauthorized.error.js'
 import Plant from './plant.model.js'
 import User from '../user/user.model.js'
 import { ADMIN_LEVEL } from '../../common/constants.js'
@@ -29,7 +30,7 @@ export default class PlantService {
     }
 
     const isAuthor = plant.created_by === userId
-    const userIsAdmin = user.score.level === ADMIN_LEVEL
+    const userIsAdmin = user.score.level >= ADMIN_LEVEL
 
     if (!isAuthor && !userIsAdmin) {
       throw new UnauthorizedError('Unauthorized.')
@@ -67,6 +68,32 @@ export default class PlantService {
     return updatedPlant
   }
 
+  static async userAlreadyVoted({ id, userId }) {
+    const plant = await Plant.getById({ id })
+    const user = await User.getById({ id: userId })
+
+    if (!plant || !user) {
+      throw new BadRequestError('Bad request.')
+    }
+
+    const alreadyVoted =
+      plant.upvotes.includes(userId) || plant.downvotes.includes(userId)
+
+    return { alreadyVoted, user }
+  }
+
+  static async upvote({ id, userId }) {
+    const updatedPlant = await Plant.upvote({ id, userId })
+
+    return updatedPlant
+  }
+
+  static async downvote({ id, userId }) {
+    const updatedPlant = await Plant.downvote({ id, userId })
+
+    return updatedPlant
+  }
+
   static async getPlantById(id) {
     const plant = await Plant.getById({ id, deleted: false })
     if (!plant) {
@@ -88,5 +115,20 @@ export default class PlantService {
     })
 
     return plants || []
+  }
+
+  static async checkPlantCompleted(plant) {
+    if (!plant._id) return false
+    if (!plant.description) return false
+    if (!plant.location) return false
+    if (!plant.location.type) return false
+    if (!plant.location.coordinates) return false
+    if (plant.location.coordinates.length !== 2) return false
+    if (!plant.images) return false
+    if (!plant.images.length > 0) return false
+    if (!plant.created_by) return false
+    if (!plant.specie_id) return false
+
+    return true
   }
 }

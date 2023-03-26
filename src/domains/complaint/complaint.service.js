@@ -126,7 +126,7 @@ export default class ComplaintService {
     return complaints
   }
 
-  static async evaluateComplaint({ id, userId, evaluation }) {
+  static async evaluateComplaint({ id, userId, evaluation, wasHelpful }) {
     const complaint = await Complaint.getById({
       id,
       deleted: false,
@@ -150,6 +150,7 @@ export default class ComplaintService {
 
     const data = {
       evaluation,
+      was_helpful: wasHelpful,
       evaluated_by: userId,
       closed: true,
       updated_at: new Date(),

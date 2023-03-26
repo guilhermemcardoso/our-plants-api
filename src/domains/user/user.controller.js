@@ -1,5 +1,4 @@
 import express from 'express'
-import multer from 'multer'
 import { isAuthorized } from '../../common/middlewares.js'
 import { successRes, errorRes, notFound } from '../../common/responses.js'
 import {
@@ -7,12 +6,11 @@ import {
   validation,
 } from '../../common/validation-rules.js'
 import BaseError from '../../error/base.error.js'
+import { GamifiedUserAction } from '../gamification/constants.js'
+import GamificationService from '../gamification/gamification.service.js'
 import UserService from './user.service.js'
 import { removeForbiddenUserFields } from './utils/validations.js'
 const router = express.Router()
-
-const storage = multer.memoryStorage()
-const upload = multer({ storage: storage })
 
 router
   .get('/me', isAuthorized, getCurrentUser)
@@ -26,12 +24,7 @@ router
     validation,
     changePassword
   )
-  .patch(
-    '/me/profile-image',
-    isAuthorized,
-    upload.single('profile_image'),
-    updateProfileImage
-  )
+  .patch('/me/profile-image', isAuthorized, updateProfileImage)
   .delete('/me/profile-image', isAuthorized, removeProfileImage)
   .use(notFound)
 
@@ -40,16 +33,24 @@ async function updateProfileImage(req, res) {
     const {
       user: { id },
     } = req
+    const { profile_image } = req.body
 
-    if (!req?.file?.buffer) {
-      return errorRes(res, 'Bad Request.', 400)
-    }
-
-    const image = req.file.buffer
     const user = await UserService.updateProfileImage({
       id,
-      imageBuffer: image,
+      profile_image,
     })
+
+    if (!user.completed_profile) {
+      const nowIsCompleted = await UserService.checkProfileCompleted(user)
+      if (nowIsCompleted) {
+        const updatedUser = await GamificationService.gamifyUserAction({
+          user,
+          action: GamifiedUserAction.COMPLETE_PROFILE,
+        })
+        return successRes(res, updatedUser, 200)
+      }
+    }
+
     if (user) {
       return successRes(res, user, 200)
     }
@@ -135,6 +136,18 @@ async function updateCurrentUser(req, res) {
     const values = removeForbiddenUserFields(req.body)
 
     const user = await UserService.updateUser({ id, values })
+
+    if (!user.completed_profile) {
+      const nowIsCompleted = await UserService.checkProfileCompleted(user)
+      if (nowIsCompleted) {
+        const updatedUser = await GamificationService.gamifyUserAction({
+          user,
+          action: GamifiedUserAction.COMPLETE_PROFILE,
+        })
+        return successRes(res, updatedUser, 200)
+      }
+    }
+
     if (user) {
       return successRes(res, user, 200)
     }

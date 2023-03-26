@@ -9,7 +9,7 @@ export const specieSchema = new Schema({
   popular_name: { type: String, required: true },
   scientific_name: { type: String, required: false },
   created_by: { type: ObjectId, ref: 'User' },
-  icon_url: { type: String, required: false },
+  icon: { type: String, required: false },
   updated_at: { type: Date, default: Date.now },
   created_at: { type: Date, default: Date.now },
   deleted: { type: Boolean, default: false },
@@ -21,11 +21,12 @@ export const SpecieModel = mongoose.model('Specie', specieSchema)
 export default class Specie {
   static async create(data) {
     try {
-      const newData = await new SpecieModel({
+      let newData = await new SpecieModel({
         _id: new ObjectId(),
         ...data,
       }).save()
 
+      newData = await newData.populate('created_by')
       return newData.toObject()
     } catch (err) {
       throw new BadRequestError('Bad request.')

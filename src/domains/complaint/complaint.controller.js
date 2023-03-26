@@ -6,6 +6,8 @@ import { isAdmin, isAuthorized } from '../../common/middlewares.js'
 import { ITEMS_PER_PAGE } from '../../common/constants.js'
 import BaseError from '../../error/base.error.js'
 import ComplaintService from './complaint.service.js'
+import GamificationService from '../gamification/gamification.service.js'
+import { GamifiedUserAction } from '../gamification/constants.js'
 
 const router = express.Router()
 
@@ -117,12 +119,29 @@ async function evaluateComplaint(req, res) {
     const {
       user: { id: userId },
     } = req
-    const { evaluation } = req.body
+    const { evaluation, was_helpful: wasHelpful } = req.body
     const complaint = await ComplaintService.evaluateComplaint({
       id,
       userId,
       evaluation,
+      wasHelpful: wasHelpful,
     })
+
+    const updatedEvaluator = await GamificationService.gamifyUserAction({
+      user: complaint.evaluated_by,
+      action: GamifiedUserAction.EVALUATE_COMPLAINT,
+    })
+
+    complaint.evaluated_by = updatedEvaluator
+
+    if (wasHelpful) {
+      const updatedAuthor = await GamificationService.gamifyUserAction({
+        user: complaint.created_by,
+        action: GamifiedUserAction.EVALUATE_COMPLAINT,
+      })
+
+      complaint.created_by = updatedAuthor
+    }
 
     return successRes(res, { complaint }, 200)
   } catch (error) {

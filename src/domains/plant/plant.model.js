@@ -13,7 +13,7 @@ export const plantSchema = new Schema({
     type: {
       type: String,
       enum: ['Point'],
-      required: true,
+      default: 'Point',
     },
     coordinates: {
       type: [Number],
@@ -22,6 +22,8 @@ export const plantSchema = new Schema({
   },
   images: { type: [String], required: false },
   created_by: { type: ObjectId, required: true, ref: UserModel },
+  upvotes: [{ type: String }],
+  downvotes: [{ type: String }],
   specie_id: { type: ObjectId, ref: SpecieModel, required: true },
   reported: { type: Boolean, default: false },
   deleted: { type: Boolean, default: false },
@@ -37,11 +39,12 @@ export const PlantModel = mongoose.model('Plant', plantSchema)
 export default class Plant {
   static async create(data) {
     try {
-      const newData = await new PlantModel({
+      let newData = await new PlantModel({
         _id: new ObjectId(),
         ...data,
       }).save()
 
+      newData = await newData.populate('created_by specie_id')
       return newData.toObject()
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -55,7 +58,7 @@ export default class Plant {
         filters.deleted = deleted
       }
       const result = await PlantModel.findOne({ _id: id, ...filters }).populate(
-        'created_by'
+        'created_by specie_id'
       )
       return result
     } catch (err) {
@@ -67,7 +70,45 @@ export default class Plant {
     try {
       const updatedData = await PlantModel.findOneAndUpdate({ _id: id }, data, {
         new: true,
-      }).populate('created_by')
+      }).populate('created_by specie_id evaluated_by')
+      return updatedData
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async upvote({ id, userId }) {
+    try {
+      await PlantModel.findOneAndUpdate(
+        { _id: id },
+        { $pullAll: { upvotes: [userId], downvotes: [userId] } }
+      )
+      const updatedData = await PlantModel.findOneAndUpdate(
+        { _id: id },
+        { $push: { upvotes: userId } },
+        {
+          new: true,
+        }
+      ).populate('created_by specie_id')
+      return updatedData
+    } catch (err) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
+  static async downvote({ id, userId }) {
+    try {
+      await PlantModel.findOneAndUpdate(
+        { _id: id },
+        { $pullAll: { upvotes: [userId], downvotes: [userId] } }
+      )
+      const updatedData = await PlantModel.findOneAndUpdate(
+        { _id: id },
+        { $push: { downvotes: userId } },
+        {
+          new: true,
+        }
+      ).populate('created_by specie_id')
       return updatedData
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -103,7 +144,7 @@ export default class Plant {
       const result = await PlantModel.find(filters)
         .limit(perPage)
         .skip((page - 1) * perPage)
-        .populate('created_by')
+        .populate('created_by specie_id')
         .lean()
 
       const count = await PlantModel.countDocuments(filters)
@@ -135,7 +176,7 @@ export default class Plant {
         },
         ...filters,
       })
-        .populate('created_by')
+        .populate('created_by specie_id')
         .lean()
 
       const count = await PlantModel.countDocuments(filters)

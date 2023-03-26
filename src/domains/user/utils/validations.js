@@ -8,6 +8,7 @@ export function removeForbiddenUserFields(item) {
   delete user.confirmed_email
   delete user.password
   delete user.profile_image
+  delete user.completed_profile
 
   return user
 }

@@ -3,7 +3,7 @@ import BadRequestError from '../../error/bad-request.error.js'
 import NotFoundError from '../../error/not-found.error.js'
 import { encryptPassword, checkPassword } from '../../services/crypt.js'
 import { removeJwt, JwtTokenType } from '../../services/jwt.js'
-import User from './user.model.js'
+import User, { UserModel } from './user.model.js'
 
 export default class UserService {
   static async create({ userData }) {
@@ -81,8 +81,8 @@ export default class UserService {
     return userWithoutPassword
   }
 
-  static async updateProfileImage({ id, imageBuffer }) {
-    const data = { profile_image: imageBuffer }
+  static async updateProfileImage({ id, profile_image }) {
+    const data = { profile_image: profile_image }
     data.updated_at = new Date()
     const user = await User.updateById({ id, data })
     if (!user) {
@@ -111,5 +111,27 @@ export default class UserService {
     const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
     return userWithoutPassword
+  }
+
+  static async checkProfileCompleted(user) {
+    if (!user._id) return false
+    if (!user.name) return false
+    if (!user.last_name) return false
+    if (!user.email) return false
+    if (!user.profile_image) return false
+    if (!user.bio) return false
+    if (!user.address) return false
+    if (!user.address.street_name) return false
+    if (!user.address.neighbourhood) return false
+    if (!user.address.zip_code) return false
+    if (!user.address.house_number) return false
+    if (!user.address.city) return false
+    if (!user.address.state_or_province) return false
+    if (!user.address.country) return false
+
+    return await User.updateById({
+      id: user._id,
+      data: { completed_profile: true },
+    })
   }
 }

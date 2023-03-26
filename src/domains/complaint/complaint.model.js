@@ -14,6 +14,7 @@ export const complaintSchema = new Schema({
   plant_id: { type: ObjectId, ref: PlantModel, required: true },
   created_by: { type: ObjectId, ref: UserModel, required: true },
   evaluated_by: { type: ObjectId, ref: UserModel },
+  was_helpful: { type: Boolean },
   deleted: { type: Boolean, default: false },
   closed: { type: Boolean, default: false },
   updated_at: { type: Date, default: Date.now },
@@ -25,11 +26,12 @@ const ComplaintModel = mongoose.model('Complaint', complaintSchema)
 export default class Complaint {
   static async create(data) {
     try {
-      const newData = await new ComplaintModel({
+      let newData = await new ComplaintModel({
         _id: new ObjectId(),
         ...data,
       }).save()
 
+      newData = await newData.populate('plant_id created_by evaluated_by')
       return newData.toObject()
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -64,7 +66,7 @@ export default class Complaint {
         {
           new: true,
         }
-      )
+      ).populate('created_by evaluated_by')
       return updatedData
     } catch (err) {
       throw new BadRequestError('Bad request.')

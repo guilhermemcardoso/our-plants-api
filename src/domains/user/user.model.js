@@ -10,7 +10,7 @@ export const userSchema = new Schema({
   last_name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  profile_image: { type: Buffer, required: false },
+  profile_image: { type: String, required: false },
   bio: { type: String, required: false },
   address: {
     street_name: { type: String, required: false },
@@ -22,12 +22,12 @@ export const userSchema = new Schema({
     country: { type: String, required: false },
   },
   score: {
-    xp: { type: Number, required: true, default: 0 },
-    role: { type: String, required: true, default: 'novice' },
-    level: { type: Number, required: true, default: 1 },
+    xp: { type: Number, default: 0 },
+    level: { type: Number, default: 1 },
   },
   updated_at: { type: Date, default: Date.now },
   created_at: { type: Date, default: Date.now },
+  completed_profile: { type: Boolean, default: false },
   confirmed_email: { type: Boolean, required: true, default: false },
 })
 
@@ -78,7 +78,7 @@ export default class User {
       const updatedData = await UserModel.findOneAndUpdate({ _id: id }, data, {
         new: true,
       })
-      return updatedData
+      return updatedData.toObject()
     } catch (err) {
       throw new BadRequestError('Bad request.')
     }
@@ -89,7 +89,7 @@ export default class User {
       const updatedData = await UserModel.findOneAndUpdate({ email }, data, {
         new: true,
       })
-      return updatedData
+      return updatedData.toObject()
     } catch (err) {
       throw new BadRequestError('Bad request.')
     }
@@ -112,7 +112,6 @@ export default class User {
         .lean()
 
       const count = await UserModel.countDocuments({
-        created_by: { $ne: new ObjectId(userId) },
         ...filters,
       })
 

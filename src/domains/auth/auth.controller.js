@@ -4,7 +4,6 @@ import { notFound } from '../../common/responses.js'
 import { successRes, errorRes } from '../../common/responses.js'
 import {
   emailAndPasswordValidationRules,
-  passwordValidationRules,
   validation,
 } from '../../common/validation-rules.js'
 import BaseError from '../../error/base.error.js'
