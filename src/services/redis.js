@@ -8,12 +8,23 @@ export default class RedisCache {
         return this.instance
       }
       const options = {
-        url: `${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+        password: process.env.UPSTASH_PASSWORD,
+        socket: {
+          host: process.env.UPSTASH_HOST,
+          port: process.env.UPSTASH_PORT,
+        },
       }
 
       this.instance = redis.createClient(options)
 
-      this.instance.on('error', (error) => console.error(`Error : ${error}`))
+      this.instance.on('connect', () => console.log('Redis is connected'))
+      this.instance.on('reconnecting', () =>
+        console.log('Redis is reconnecting')
+      )
+      this.instance.on('ready', () => console.log('Redis is ready'))
+      this.instance.on('error', (error) =>
+        console.error(`[Redis] Error : ${error}`)
+      )
       return this.instance
     } catch (err) {
       console.error('[REDIS] Could not connect', err)
@@ -25,6 +36,7 @@ export default class RedisCache {
       const redis = this.getInstance()
       await redis.connect()
     } catch (err) {
+      console.error(`[Redis] Error while connecting: ${err}`)
       throw new InternalServerError('Internal server error.')
     }
   }
