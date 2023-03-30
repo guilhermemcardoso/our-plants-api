@@ -1,6 +1,6 @@
 import BadRequestError from '../../error/bad-request.error.js'
 import NotFoundError from '../../error/not-found.error.js'
-import UnauthorizedError from '../../error/unauthorized.error.js'
+import ForbiddenError from '../../error/forbidden.error.js'
 import Complaint from './complaint.model.js'
 import Plant from '../plant/plant.model.js'
 import User from '../user/user.model.js'
@@ -38,7 +38,7 @@ export default class ComplaintService {
 
     const { _id: authorId } = complaint.created_by
     if (userId !== authorId.toString()) {
-      throw new UnauthorizedError('Unauthorized.')
+      throw new ForbiddenError('Forbidden.')
     }
 
     const plant = await Plant.getById({

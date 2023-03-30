@@ -1,6 +1,6 @@
 import BadRequestError from '../../error/bad-request.error.js'
 import NotFoundError from '../../error/not-found.error.js'
-import UnauthorizedError from '../../error/unauthorized.error.js'
+import ForbiddenError from '../../error/forbidden.error.js'
 import Plant from './plant.model.js'
 import User from '../user/user.model.js'
 import { ADMIN_LEVEL } from '../../common/constants.js'
@@ -26,14 +26,14 @@ export default class PlantService {
     }
 
     if (!plant.editable) {
-      throw new UnauthorizedError('Unauthorized.')
+      throw new ForbiddenError('Forbidden.')
     }
 
     const isAuthor = plant.created_by === userId
     const userIsAdmin = user.score.level >= ADMIN_LEVEL
 
     if (!isAuthor && !userIsAdmin) {
-      throw new UnauthorizedError('Unauthorized.')
+      throw new ForbiddenError('Forbidden.')
     }
 
     const data = {

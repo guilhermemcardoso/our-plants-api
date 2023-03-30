@@ -7,7 +7,7 @@ export const isAdmin = async function (req, res, next) {
   try {
     const bearerToken = req.get('Authorization')
     if (!bearerToken) {
-      return errorRes(res, 'Unauthorized.', 401)
+      return errorRes(res, 'Bad request.', 400)
     }
 
     const token = bearerToken.replace('Bearer ', '')
@@ -23,8 +23,12 @@ export const isAdmin = async function (req, res, next) {
 
     const user = await User.getById({ id: decodedToken.sub })
 
-    if (!user || user.level < ADMIN_LEVEL) {
+    if (!user) {
       return errorRes(res, 'Unauthorized.', 401)
+    }
+
+    if (user.level < ADMIN_LEVEL) {
+      return errorRes(res, 'Forbidden.', 403)
     }
 
     req.user = {
@@ -36,7 +40,7 @@ export const isAdmin = async function (req, res, next) {
     req.token = token
     return next()
   } catch (err) {
-    return errorRes(res, 'Unauthorized.', 401)
+    return errorRes(res, 'Bad request.', 400)
   }
 }
 
@@ -44,7 +48,7 @@ export const isAuthorized = async function (req, res, next) {
   try {
     const bearerToken = req.get('Authorization')
     if (!bearerToken) {
-      return errorRes(res, 'Unauthorized.', 401)
+      return errorRes(res, 'Bad request.', 400)
     }
 
     const token = bearerToken.replace('Bearer ', '')
@@ -66,6 +70,6 @@ export const isAuthorized = async function (req, res, next) {
     req.token = token
     return next()
   } catch (err) {
-    return errorRes(res, 'Unauthorized.', 401)
+    return errorRes(res, 'Bad request.', 400)
   }
 }

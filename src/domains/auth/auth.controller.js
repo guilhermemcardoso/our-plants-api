@@ -70,7 +70,7 @@ async function login(req, res) {
     if (error instanceof BaseError) {
       return errorRes(res, error.name, error.statusCode)
     }
-    return errorRes(res, 'Unauthorized.', 401)
+    return errorRes(res, 'Bad request.', 400)
   }
 }
 

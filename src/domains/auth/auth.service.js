@@ -62,7 +62,7 @@ export default class AuthService {
     })
 
     if (!isPasswordValid) {
-      throw new BadRequestError('Bad request.')
+      throw new UnauthorizedError('Unauthorized.')
     }
 
     const tokenPayload = {
