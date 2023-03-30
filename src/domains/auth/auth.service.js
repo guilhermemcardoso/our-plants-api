@@ -53,7 +53,7 @@ export default class AuthService {
       filters: { confirmed_email: true },
     })
     if (!user) {
-      throw new UnauthorizedError('Unauthorized.')
+      throw new UnauthorizedError('Authentication failed.')
     }
 
     const isPasswordValid = await checkPassword({
@@ -62,7 +62,7 @@ export default class AuthService {
     })
 
     if (!isPasswordValid) {
-      throw new UnauthorizedError('Unauthorized.')
+      throw new UnauthorizedError('Authentication failed.')
     }
 
     const tokenPayload = {
@@ -122,7 +122,7 @@ export default class AuthService {
     })
 
     if (!isValid) {
-      throw new UnauthorizedError('Unauthorized.')
+      throw new UnauthorizedError('Authentication failed.')
     }
 
     const { sub, email, name } = await decodeToken({
