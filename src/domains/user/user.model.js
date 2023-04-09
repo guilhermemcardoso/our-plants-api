@@ -7,7 +7,7 @@ const ObjectId = mongoose.Types.ObjectId
 export const userSchema = new Schema({
   _id: ObjectId,
   name: { type: String, required: true },
-  last_name: { type: String, required: true },
+  lastname: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   profile_image: { type: String, required: false },

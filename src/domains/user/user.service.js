@@ -116,7 +116,7 @@ export default class UserService {
   static async checkProfileCompleted(user) {
     if (!user._id) return false
     if (!user.name) return false
-    if (!user.last_name) return false
+    if (!user.lastname) return false
     if (!user.email) return false
     if (!user.profile_image) return false
     if (!user.bio) return false
