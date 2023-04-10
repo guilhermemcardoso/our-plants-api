@@ -75,7 +75,7 @@ export default class MailService {
       cachedValue: user.email,
     })
 
-    const url = `${process.env.MAIL_LINK_URL}/password-recovery?token=${token}&email=${user.email}`
+    const url = `${process.env.MAIL_LINK_URL}/password-recovery/${token}`
     const emailTemplateSource = readTemplate(EmailTemplates.PASSWORD_RECOVERY)
 
     const template = handlebars.compile(emailTemplateSource)

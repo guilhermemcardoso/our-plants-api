@@ -22,7 +22,7 @@ router
   .get('/validate-password-recovery-token', validatePasswordRecoveryToken)
   .post(
     '/recovery-password',
-    emailAndPasswordValidationRules(),
+    passwordValidationRules(),
     validation,
     recoveryPassword
   )
@@ -121,8 +121,8 @@ async function forgotPassword(req, res) {
 
 async function recoveryPassword(req, res) {
   try {
-    const { token, password, email } = req.body
-    await AuthService.recoveryPassword({ email, password, token })
+    const { token, password } = req.body
+    await AuthService.recoveryPassword({ password, token })
     return successRes(res, { message: 'Password updated successfully.' }, 200)
   } catch (error) {
     if (error instanceof BaseError) {

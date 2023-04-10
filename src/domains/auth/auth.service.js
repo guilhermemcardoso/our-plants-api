@@ -128,7 +128,7 @@ export default class AuthService {
     }
   }
 
-  static async recoveryPassword({ email, password, token }) {
+  static async recoveryPassword({ password, token }) {
     const isTokenValid = await validateToken({
       token,
       type: JwtTokenType.PASSWORD_RECOVERY,
@@ -137,6 +137,11 @@ export default class AuthService {
     if (!isTokenValid) {
       throw new BadRequestError('Bad request.')
     }
+
+    const { email } = decodeToken({
+      token,
+      type: JwtTokenType.PASSWORD_RECOVERY,
+    })
 
     const user = await User.updateByEmail({
       email,
