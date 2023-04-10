@@ -36,7 +36,7 @@ export default class MailService {
       cachedValue: user.email,
     })
 
-    const url = `${process.env.MAIL_LINK_URL}:${process.env.PORT}/auth/email-confirmation?token=${token}`
+    const url = `${process.env.MAIL_LINK_URL}/email-confirmation/${token}`
 
     const emailTemplateSource = readTemplate(EmailTemplates.EMAIL_CONFIRMATION)
 
@@ -75,7 +75,7 @@ export default class MailService {
       cachedValue: user.email,
     })
 
-    const url = `${process.env.MAIL_LINK_URL}:${process.env.PORT}/auth/recovery-password?token=${token}&email=${user.email}`
+    const url = `${process.env.MAIL_LINK_URL}/password-recovery?token=${token}&email=${user.email}`
     const emailTemplateSource = readTemplate(EmailTemplates.PASSWORD_RECOVERY)
 
     const template = handlebars.compile(emailTemplateSource)
