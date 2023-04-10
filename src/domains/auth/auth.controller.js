@@ -16,6 +16,7 @@ const router = express.Router()
 router
   .post('/register', emailAndPasswordValidationRules(), validation, register)
   .get('/email-confirmation', emailConfirmation)
+  .get('/resend-email-confirmation', resendEmailConfirmationLink)
   .post('/login', emailAndPasswordValidationRules(), validation, login)
   .get('/forgot-password', forgotPassword)
   .post(
@@ -60,16 +61,40 @@ async function emailConfirmation(req, res) {
   }
 }
 
+async function resendEmailConfirmationLink(req, res) {
+  try {
+    const { email } = req.query
+    const user = await AuthService.checkEmailConfirmationToken({
+      email,
+    })
+
+    await MailService.sendUserConfirmation(user)
+
+    return successRes(res, null)
+  } catch (error) {
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad request.', 400)
+  }
+}
+
 async function login(req, res) {
   try {
     const { email, password } = req.body
     const auth = await AuthService.login({ email, password })
+
+    if (!auth.access_token || !auth.refresh_token) {
+      await MailService.sendUserConfirmation(auth.user)
+      return errorRes(res, 'Locked.', 423)
+    }
 
     return successRes(res, auth, 200)
   } catch (error) {
     if (error instanceof BaseError) {
       return errorRes(res, error.name, error.statusCode)
     }
+
     return errorRes(res, 'Bad request.', 400)
   }
 }

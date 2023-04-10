@@ -10,6 +10,7 @@ import {
   validateToken,
 } from '../../services/jwt.js'
 import { checkPassword, encryptPassword } from '../../services/crypt.js'
+import UserService from '../user/user.service.js'
 
 export default class AuthService {
   static async register({ userData }) {
@@ -47,10 +48,26 @@ export default class AuthService {
     return userWithoutPassword
   }
 
+  static async checkEmailConfirmationToken({ email }) {
+    const tokenExists = await checkEmailConfirmationJwt({ email })
+    if (!tokenExists) {
+      throw new BadRequestError('Bad request.')
+    }
+    const { user } = await UserService.getUserByEmail(email)
+
+    if (!user) {
+      throw new BadRequestError('Bad request.')
+    }
+
+    const userWithoutPassword = { ...user }
+    delete userWithoutPassword.password
+
+    return userWithoutPassword
+  }
+
   static async login({ email, password }) {
     const user = await User.getByEmail({
       email,
-      filters: { confirmed_email: true },
     })
     if (!user) {
       throw new UnauthorizedError('Authentication failed.')
@@ -63,6 +80,17 @@ export default class AuthService {
 
     if (!isPasswordValid) {
       throw new UnauthorizedError('Authentication failed.')
+    }
+
+    const userWithoutPassword = { ...user }
+    delete userWithoutPassword.password
+
+    if (!user.confirmed_email) {
+      return {
+        user: userWithoutPassword,
+        access_token: null,
+        refresh_token: null,
+      }
     }
 
     const tokenPayload = {
@@ -82,9 +110,6 @@ export default class AuthService {
       type: JwtTokenType.REFRESH,
       cachedValue: accessToken,
     })
-
-    const userWithoutPassword = { ...user }
-    delete userWithoutPassword.password
 
     return {
       user: userWithoutPassword,

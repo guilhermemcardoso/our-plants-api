@@ -78,6 +78,22 @@ export async function generateJwt({ payload, type, cachedValue }) {
   }
 }
 
+export async function checkEmailConfirmationJwt({ email }) {
+  try {
+    const isCached = await RedisCache.getCache(
+      `${JwtTokenType.EMAIL_CONFIRMATION}-${email}`
+    )
+
+    if (isCached) {
+      return true
+    }
+
+    return false
+  } catch (err) {
+    throw new InternalServerError('Internal Error.')
+  }
+}
+
 export async function validateToken({ token, type, value = null }) {
   try {
     const secretOrPrivateKey = process.env[`JWT_${type}_SECRET`]
