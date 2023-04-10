@@ -19,6 +19,7 @@ router
   .get('/resend-email-confirmation', resendEmailConfirmationLink)
   .post('/login', emailAndPasswordValidationRules(), validation, login)
   .get('/forgot-password', forgotPassword)
+  .get('/validate-password-recovery-token', validatePasswordRecoveryToken)
   .post(
     '/recovery-password',
     emailAndPasswordValidationRules(),
@@ -123,6 +124,20 @@ async function recoveryPassword(req, res) {
     const { token, password, email } = req.body
     await AuthService.recoveryPassword({ email, password, token })
     return successRes(res, { message: 'Password updated successfully.' }, 200)
+  } catch (error) {
+    if (error instanceof BaseError) {
+      return errorRes(res, error.name, error.statusCode)
+    }
+    return errorRes(res, 'Bad request.', 400)
+  }
+}
+
+async function validatePasswordRecoveryToken(req, res) {
+  try {
+    const { token } = req.query
+    await AuthService.validatePasswordRecoveryToken({ token })
+
+    return successRes(res, { message: 'Valid' }, 200)
   } catch (error) {
     if (error instanceof BaseError) {
       return errorRes(res, error.name, error.statusCode)

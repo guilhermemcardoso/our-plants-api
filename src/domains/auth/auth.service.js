@@ -65,6 +65,16 @@ export default class AuthService {
     return userWithoutPassword
   }
 
+  static async validatePasswordRecoveryToken({ token }) {
+    const isValid = await validateToken({
+      token,
+      type: JwtTokenType.PASSWORD_RECOVERY,
+    })
+    if (!isValid) {
+      throw new BadRequestError('Bad request.')
+    }
+  }
+
   static async login({ email, password }) {
     const user = await User.getByEmail({
       email,
