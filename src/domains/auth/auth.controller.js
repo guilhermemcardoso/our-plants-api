@@ -3,6 +3,7 @@ import express from 'express'
 import { notFound } from '../../common/responses.js'
 import { successRes, errorRes } from '../../common/responses.js'
 import {
+  passwordValidationRules,
   emailAndPasswordValidationRules,
   validation,
 } from '../../common/validation-rules.js'
