@@ -22,10 +22,10 @@ router
   .get('/forgot-password', forgotPassword)
   .get('/validate-password-recovery-token', validatePasswordRecoveryToken)
   .post(
-    '/recovery-password',
+    '/password-recovery',
     passwordValidationRules(),
     validation,
-    recoveryPassword
+    passwordRecovery
   )
   .post('/refresh-token', refreshToken)
   .use(notFound)
@@ -120,7 +120,7 @@ async function forgotPassword(req, res) {
   }
 }
 
-async function recoveryPassword(req, res) {
+async function passwordRecovery(req, res) {
   try {
     const { token, password } = req.body
     await AuthService.recoveryPassword({ password, token })

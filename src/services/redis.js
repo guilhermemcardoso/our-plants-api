@@ -69,4 +69,14 @@ export default class RedisCache {
       throw new InternalServerError('Internal server error.')
     }
   }
+
+  static async deleteAll() {
+    try {
+      const redis = this.getInstance()
+      const value = await redis.flushAll()
+      return value
+    } catch (err) {
+      throw new InternalServerError('Internal server error.')
+    }
+  }
 }
