@@ -61,16 +61,16 @@ export default class MailService {
     })
   }
 
-  static async sendRecoveryPassword(user) {
+  static async sendPasswordRecovery(user) {
     const transporter = this.getInstance()
 
-    const recoveryPasswordPayload = {
+    const passwordRecoveryPayload = {
       sub: user.email,
       email: user.email,
     }
 
     const token = await generateJwt({
-      payload: recoveryPasswordPayload,
+      payload: passwordRecoveryPayload,
       type: JwtTokenType.PASSWORD_RECOVERY,
       cachedValue: user.email,
     })

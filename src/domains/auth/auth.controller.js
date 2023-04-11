@@ -105,7 +105,7 @@ async function forgotPassword(req, res) {
   try {
     const { email } = req.query
     const user = await UserService.getUserByEmail(email)
-    await MailService.sendRecoveryPassword(user)
+    await MailService.sendPasswordRecovery(user)
 
     return successRes(
       res,
@@ -123,7 +123,7 @@ async function forgotPassword(req, res) {
 async function passwordRecovery(req, res) {
   try {
     const { token, password } = req.body
-    await AuthService.recoveryPassword({ password, token })
+    await AuthService.passwordRecovery({ password, token })
     return successRes(res, { message: 'Password updated successfully.' }, 200)
   } catch (error) {
     if (error instanceof BaseError) {
