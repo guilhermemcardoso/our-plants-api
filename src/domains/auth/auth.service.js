@@ -1,9 +1,11 @@
 import User from '../user/user.model.js'
+import LockedError from '../../error/locked.error.js'
 import ConflictError from '../../error/conflict.error.js'
 import BadRequestError from '../../error/bad-request.error.js'
 import UnauthorizedError from '../../error/unauthorized.error.js'
 import {
   JwtTokenType,
+  checkEmailConfirmationJwt,
   decodeToken,
   generateJwt,
   removeJwt,
@@ -11,6 +13,7 @@ import {
 } from '../../services/jwt.js'
 import { checkPassword, encryptPassword } from '../../services/crypt.js'
 import UserService from '../user/user.service.js'
+import { intervalToDuration } from 'date-fns'
 
 export default class AuthService {
   static async register({ userData }) {
@@ -53,10 +56,26 @@ export default class AuthService {
     if (!tokenExists) {
       throw new BadRequestError('Bad request.')
     }
-    const { user } = await UserService.getUserByEmail(email)
+    const user = await UserService.getUserByEmail(email)
 
     if (!user) {
       throw new BadRequestError('Bad request.')
+    }
+
+    const decodedToken = await decodeToken({
+      token: tokenExists,
+      type: JwtTokenType.EMAIL_CONFIRMATION,
+    })
+
+    const { minutes } = intervalToDuration({
+      start: new Date(decodedToken.created_at),
+      end: new Date(),
+    })
+
+    if (minutes < 2) {
+      throw new LockedError(
+        'Wait to resend the email confirmation'
+      )
     }
 
     const userWithoutPassword = { ...user }

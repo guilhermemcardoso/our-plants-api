@@ -85,7 +85,7 @@ export async function checkEmailConfirmationJwt({ email }) {
     )
 
     if (isCached) {
-      return true
+      return isCached
     }
 
     return false

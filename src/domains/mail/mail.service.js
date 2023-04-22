@@ -28,6 +28,7 @@ export default class MailService {
       sub: user._id.toString(),
       email: user.email,
       name: user.name,
+      created_at: new Date(),
     }
 
     const token = await generateJwt({
