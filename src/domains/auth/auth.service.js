@@ -72,16 +72,15 @@ export default class AuthService {
       end: new Date(),
     })
 
+    let canResend = true
     if (minutes < 2) {
-      throw new LockedError(
-        'Wait to resend the email confirmation'
-      )
+      canResend = false
     }
 
     const userWithoutPassword = { ...user }
     delete userWithoutPassword.password
 
-    return userWithoutPassword
+    return { user: userWithoutPassword, canResend }
   }
 
   static async validatePasswordRecoveryToken({ token }) {

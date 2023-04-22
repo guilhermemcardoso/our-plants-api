@@ -66,9 +66,13 @@ async function emailConfirmation(req, res) {
 async function resendEmailConfirmationLink(req, res) {
   try {
     const { email } = req.query
-    const user = await AuthService.checkEmailConfirmationToken({
+    const { user, canResend } = await AuthService.checkEmailConfirmationToken({
       email,
     })
+
+    if (!canResend) {
+      throw new LockedError('Wait to resend the email confirmation')
+    }
 
     await MailService.sendUserConfirmation(user)
 
@@ -86,12 +90,19 @@ async function login(req, res) {
     const { email, password } = req.body
     const auth = await AuthService.login({ email, password })
 
-    if (!auth.access_token || !auth.refresh_token) {
-      await MailService.sendUserConfirmation(auth.user)
-      return errorRes(res, 'Locked.', 423)
+    if (auth.access_token && auth.refresh_token) {
+      return successRes(res, auth, 200)
     }
 
-    return successRes(res, auth, 200)
+    const { canResend } = await AuthService.checkEmailConfirmationToken({
+      email,
+    })
+
+    if (canResend) {
+      await MailService.sendUserConfirmation(auth.user)
+    }
+
+    return errorRes(res, 'Locked.', 423)
   } catch (error) {
     if (error instanceof BaseError) {
       return errorRes(res, error.name, error.statusCode)
