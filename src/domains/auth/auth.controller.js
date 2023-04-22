@@ -69,9 +69,9 @@ async function resendEmailConfirmationLink(req, res) {
     const { user, canResend } = await AuthService.checkEmailConfirmationToken({
       email,
     })
-
+    
     if (!canResend) {
-      throw new LockedError('Wait to resend the email confirmation')
+      return errorRes(res, 'Locked.', 423)
     }
 
     await MailService.sendUserConfirmation(user)
