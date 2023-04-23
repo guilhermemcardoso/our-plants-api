@@ -112,6 +112,7 @@ async function login(req, res) {
 
     return errorRes(res, 'Locked.', 423)
   } catch (error) {
+    console.log('[ERROR] /auth/login', error)
     if (error instanceof BaseError) {
       return errorRes(res, error.name, error.statusCode)
     }
