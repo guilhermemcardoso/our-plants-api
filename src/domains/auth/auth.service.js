@@ -1,18 +1,16 @@
 import User from '../user/user.model.js'
-import LockedError from '../../error/locked.error.js'
 import ConflictError from '../../error/conflict.error.js'
 import BadRequestError from '../../error/bad-request.error.js'
 import UnauthorizedError from '../../error/unauthorized.error.js'
 import {
   JwtTokenType,
-  checkEmailConfirmationJwt,
+  getToken,
   decodeToken,
   generateJwt,
   removeJwt,
   validateToken,
 } from '../../services/jwt.js'
 import { checkPassword, encryptPassword } from '../../services/crypt.js'
-import UserService from '../user/user.service.js'
 import { intervalToDuration } from 'date-fns'
 
 export default class AuthService {
@@ -51,20 +49,16 @@ export default class AuthService {
     return userWithoutPassword
   }
 
-  static async checkEmailConfirmationToken({ email }) {
-    const tokenExists = await checkEmailConfirmationJwt({ email })
-    if (!tokenExists) {
-      throw new BadRequestError('Bad request.')
-    }
-    const user = await UserService.getUserByEmail(email)
+  static async canResendToken({ email, type }) {
+    const tokenExists = await getToken({ email, type })
 
-    if (!user) {
-      throw new BadRequestError('Bad request.')
+    if (!tokenExists) {
+      return true
     }
 
     const decodedToken = await decodeToken({
       token: tokenExists,
-      type: JwtTokenType.EMAIL_CONFIRMATION,
+      type: type,
     })
 
     const { minutes } = intervalToDuration({
@@ -72,15 +66,11 @@ export default class AuthService {
       end: new Date(),
     })
 
-    let canResend = true
-    if (minutes < 2) {
-      canResend = false
+    if (minutes < process.env[`${type}_MIN_WAITING_TIME`]) {
+      return false
     }
 
-    const userWithoutPassword = { ...user }
-    delete userWithoutPassword.password
-
-    return { user: userWithoutPassword, canResend }
+    return true
   }
 
   static async validatePasswordRecoveryToken({ token }) {

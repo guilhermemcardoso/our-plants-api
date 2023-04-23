@@ -78,11 +78,9 @@ export async function generateJwt({ payload, type, cachedValue }) {
   }
 }
 
-export async function checkEmailConfirmationJwt({ email }) {
+export async function getToken({ email, type }) {
   try {
-    const isCached = await RedisCache.getCache(
-      `${JwtTokenType.EMAIL_CONFIRMATION}-${email}`
-    )
+    const isCached = await RedisCache.getCache(`${type}-${email}`)
 
     if (isCached) {
       return isCached

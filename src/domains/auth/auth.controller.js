@@ -66,10 +66,17 @@ async function emailConfirmation(req, res) {
 async function resendEmailConfirmationLink(req, res) {
   try {
     const { email } = req.query
-    const { user, canResend } = await AuthService.checkEmailConfirmationToken({
+    const user = await UserService.getUserByEmail(email)
+
+    if (!user || user.confirmed_email) {
+      return errorRes(res, 'Bad request.', 400)
+    }
+
+    const canResend = await AuthService.canResendToken({
       email,
+      type: JwtTokenType.EMAIL_CONFIRMATION,
     })
-    
+
     if (!canResend) {
       return errorRes(res, 'Locked.', 423)
     }
@@ -94,8 +101,9 @@ async function login(req, res) {
       return successRes(res, auth, 200)
     }
 
-    const { canResend } = await AuthService.checkEmailConfirmationToken({
+    const canResend = await AuthService.canResendToken({
       email,
+      type: JwtTokenType.EMAIL_CONFIRMATION,
     })
 
     if (canResend) {
@@ -116,6 +124,20 @@ async function forgotPassword(req, res) {
   try {
     const { email } = req.query
     const user = await UserService.getUserByEmail(email)
+
+    if (!user || !user.confirmed_email) {
+      return errorRes(res, 'Bad request.', 400)
+    }
+
+    const canResend = await AuthService.canResendToken({
+      email,
+      type: JwtTokenType.PASSWORD_RECOVERY,
+    })
+
+    if (!canResend) {
+      return errorRes(res, 'Locked.', 423)
+    }
+
     await MailService.sendPasswordRecovery(user)
 
     return successRes(

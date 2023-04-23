@@ -68,6 +68,7 @@ export default class MailService {
     const passwordRecoveryPayload = {
       sub: user.email,
       email: user.email,
+      created_at: new Date(),
     }
 
     const token = await generateJwt({
