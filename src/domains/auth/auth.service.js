@@ -1,4 +1,5 @@
 import User from '../user/user.model.js'
+import Plant from '../plant/plant.model.js'
 import ConflictError from '../../error/conflict.error.js'
 import BadRequestError from '../../error/bad-request.error.js'
 import UnauthorizedError from '../../error/unauthorized.error.js'
@@ -12,6 +13,7 @@ import {
 } from '../../services/jwt.js'
 import { checkPassword, encryptPassword } from '../../services/crypt.js'
 import { intervalToDuration } from 'date-fns'
+import GamificationService from '../gamification/gamification.service.js'
 
 export default class AuthService {
   static async register({ userData }) {
@@ -100,7 +102,16 @@ export default class AuthService {
       throw new UnauthorizedError('Authentication failed.')
     }
 
-    const userWithoutPassword = { ...user }
+    const plants = await Plant.count({ created_by: user._id })
+    const totalXpNextLevel = GamificationService.getTotalXpByLevel(
+      user.score.level + 1
+    )
+    const userWithoutPassword = {
+      ...user,
+      mapped_plants: plants,
+      score: { ...user.score, xp_next_level: totalXpNextLevel },
+    }
+
     delete userWithoutPassword.password
 
     if (!user.confirmed_email) {
