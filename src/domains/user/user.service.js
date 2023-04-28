@@ -3,7 +3,9 @@ import BadRequestError from '../../error/bad-request.error.js'
 import NotFoundError from '../../error/not-found.error.js'
 import { encryptPassword, checkPassword } from '../../services/crypt.js'
 import { removeJwt, JwtTokenType } from '../../services/jwt.js'
-import User, { UserModel } from './user.model.js'
+import User from './user.model.js'
+import Plant from '../plant/plant.model.js'
+import GamificationService from '../gamification/gamification.service.js'
 
 export default class UserService {
   static async create({ userData }) {
@@ -22,22 +24,48 @@ export default class UserService {
 
   static async getUserById(id, showPassword = false) {
     const user = await User.getById({ id })
+
     if (!user) {
       throw new NotFoundError('Not found.')
     }
 
-    if (showPassword) {
-      return user
+    const plants = await Plant.count({ created_by: user._id })
+    const totalXpNextLevel = GamificationService.getTotalXpByLevel(
+      user.score.level + 1
+    )
+    const userWithoutPassword = {
+      ...user,
+      mapped_plants: plants,
+      score: { ...user.score, xp_next_level: totalXpNextLevel },
     }
 
-    const userWithoutPassword = { ...user }
+    if (showPassword) {
+      return userWithoutPassword
+    }
+
     delete userWithoutPassword.password
     return userWithoutPassword
   }
 
-  static async getUserByEmail(email) {
+  static async getUserByEmail(email, showPassword = false) {
     const user = await User.getByEmail({ email })
-    const userWithoutPassword = { ...user }
+
+    if (!user) {
+      throw new NotFoundError('Not found.')
+    }
+
+    const totalXpNextLevel = GamificationService.getTotalXpByLevel(
+      user.score.level + 1
+    )
+    const userWithoutPassword = {
+      ...user,
+      score: { ...user.score, xp_next_level: totalXpNextLevel },
+    }
+
+    if (showPassword) {
+      return userWithoutPassword
+    }
+
     delete userWithoutPassword.password
     return userWithoutPassword
   }
