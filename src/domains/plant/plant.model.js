@@ -70,7 +70,7 @@ export default class Plant {
     try {
       const updatedData = await PlantModel.findOneAndUpdate({ _id: id }, data, {
         new: true,
-      }).populate('created_by specie_id evaluated_by')
+      }).populate('created_by specie_id')
       return updatedData
     } catch (err) {
       throw new BadRequestError('Bad request.')
