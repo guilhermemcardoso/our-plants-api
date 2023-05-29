@@ -13,7 +13,7 @@ const router = express.Router()
 
 router
   .post('/', isAuthorized, createPlant)
-  .get('/list', isAuthorized, getPlantsNearBy)
+  .post('/list', isAuthorized, getPlantsNearBy)
   .get('/:id', isAuthorized, getPlantById)
   .patch('/:id', isAuthorized, updatePlant)
   .delete('/:id', isAdmin, removePlant)
