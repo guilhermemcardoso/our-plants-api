@@ -170,7 +170,7 @@ export default class Plant {
             $maxDistance: distance,
             $geometry: {
               type: 'Point',
-              coordinates: [latitude, longitude],
+              coordinates: [longitude, latitude],
             },
           },
         },
@@ -179,11 +179,8 @@ export default class Plant {
         .populate('created_by specie_id')
         .lean()
 
-      const count = await PlantModel.countDocuments(filters)
-
       return {
-        items: result,
-        total_items: count,
+        items: result
       }
     } catch (err) {
       throw new BadRequestError('Bad request.')

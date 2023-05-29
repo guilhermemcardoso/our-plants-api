@@ -13,7 +13,8 @@ const router = express.Router()
 
 router
   .post('/', isAuthorized, createPlant)
-  .post('/list', isAuthorized, getPlantsNearBy)
+  .get('/list', isAuthorized, getPlants)
+  .post('/near-by', isAuthorized, getPlantsNearBy)
   .get('/:id', isAuthorized, getPlantById)
   .patch('/:id', isAuthorized, updatePlant)
   .delete('/:id', isAdmin, removePlant)
@@ -159,6 +160,19 @@ async function getPlantById(req, res) {
     return errorRes(res, 'Bad Request.', 400)
   }
   return errorRes(res, null, 404)
+}
+
+async function getPlants(req, res) {
+  try {
+    const { page, perPage } = req.query
+    const plants = await PlantService.getPlants({
+      page: page || 1,
+      perPage: perPage || ITEMS_PER_PAGE,
+    })
+    return successRes(res, plants || [], 200)
+  } catch (error) {
+    return errorRes(res, null, 400)
+  }
 }
 
 async function getPlantsNearBy(req, res) {

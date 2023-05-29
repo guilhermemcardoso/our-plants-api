@@ -131,4 +131,14 @@ export default class PlantService {
 
     return true
   }
+
+  static async getPlants({ page, perPage }) {
+    const plants = await Plant.list({
+      page,
+      perPage,
+      filters: { deleted: false },
+    })
+
+    return plants
+  }
 }
