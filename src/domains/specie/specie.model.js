@@ -26,7 +26,10 @@ export default class Specie {
         ...data,
       }).save()
 
-      newData = await newData.populate('created_by')
+      newData = await newData.populate({
+        path: 'created_by',
+        select: '-password',
+      })
       return newData.toObject()
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -42,7 +45,9 @@ export default class Specie {
       const result = await SpecieModel.findOne({
         _id: id,
         ...filters,
-      }).populate('created_by').lean()
+      })
+        .populate({ path: 'created_by', select: '-password' })
+        .lean()
       return result
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -57,7 +62,7 @@ export default class Specie {
         {
           new: true,
         }
-      ).populate('created_by')
+      ).populate({ path: 'created_by', select: '-password' })
       return updatedData
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -72,7 +77,7 @@ export default class Specie {
         {
           new: true,
         }
-      ).populate('created_by')
+      ).populate({ path: 'created_by', select: '-password' })
       return updatedData
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -93,7 +98,7 @@ export default class Specie {
       const result = await SpecieModel.find(filters)
         .limit(perPage)
         .skip((page - 1) * perPage)
-        .populate('created_by')
+        .populate({ path: 'created_by', select: '-password' })
         .lean()
 
       const count = await SpecieModel.countDocuments(filters)

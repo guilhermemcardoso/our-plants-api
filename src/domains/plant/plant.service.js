@@ -106,12 +106,18 @@ export default class PlantService {
     return formattedPlant
   }
 
-  static async getPlantsNearBy({ latitude, longitude, distance }) {
+  static async getPlantsNearBy({
+    latitude,
+    longitude,
+    distance,
+    filteredSpecies,
+  }) {
     const plants = await Plant.getNearBy({
       latitude,
       longitude,
       distance,
       filters: { deleted: false },
+      filteredSpecies,
     })
 
     return plants || []

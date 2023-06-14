@@ -177,11 +177,12 @@ async function getPlants(req, res) {
 
 async function getPlantsNearBy(req, res) {
   try {
-    const { latitude, longitude, distance } = req.body
+    const { latitude, longitude, distance, filteredSpecies } = req.body
     const plants = await PlantService.getPlantsNearBy({
       latitude,
       longitude,
       distance,
+      filteredSpecies
     })
 
     return successRes(res, plants, 200)
