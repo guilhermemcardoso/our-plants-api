@@ -44,9 +44,11 @@ export default class Plant {
         ...data,
       }).save()
 
-      newData = await newData
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'specie_id' })
+      console.log('newData', newData)
+      newData = await newData.populate([
+        { path: 'created_by', select: '-password' },
+        { path: 'specie_id' },
+      ])
       return newData.toObject()
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -59,9 +61,9 @@ export default class Plant {
       if (deleted !== undefined) {
         filters.deleted = deleted
       }
-      const result = await PlantModel.findOne({ _id: id, ...filters })
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'specie_id' })
+      const result = await PlantModel.findOne({ _id: id, ...filters }).populate(
+        [{ path: 'created_by', select: '-password' }, { path: 'specie_id' }]
+      )
       return result
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -72,11 +74,13 @@ export default class Plant {
     try {
       const updatedData = await PlantModel.findOneAndUpdate({ _id: id }, data, {
         new: true,
-      })
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'specie_id' })
+      }).populate([
+        { path: 'created_by', select: '-password' },
+        { path: 'specie_id' },
+      ])
       return updatedData
     } catch (err) {
+      console.log('AQUI', err)
       throw new BadRequestError('Bad request.')
     }
   }
@@ -93,9 +97,10 @@ export default class Plant {
         {
           new: true,
         }
-      )
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'specie_id' })
+      ).populate([
+        { path: 'created_by', select: '-password' },
+        { path: 'specie_id' },
+      ])
       return updatedData
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -114,9 +119,10 @@ export default class Plant {
         {
           new: true,
         }
-      )
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'specie_id' })
+      ).populate([
+        { path: 'created_by', select: '-password' },
+        { path: 'specie_id' },
+      ])
       return updatedData
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -152,8 +158,10 @@ export default class Plant {
       const result = await PlantModel.find(filters)
         .limit(perPage)
         .skip((page - 1) * perPage)
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'specie_id' })
+        .populate([
+          { path: 'created_by', select: '-password' },
+          { path: 'specie_id' },
+        ])
         .lean()
 
       const count = await PlantModel.countDocuments(filters)
@@ -184,7 +192,6 @@ export default class Plant {
           ? { ...filters, specie_id: { $in: filteredSpecies } }
           : filters
 
-      console.log('FILTER', filteredSpecies && filteredSpecies.length > 0)
       const result = await PlantModel.find({
         location: {
           $near: {
@@ -197,15 +204,16 @@ export default class Plant {
         },
         ...filter,
       })
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'specie_id' })
+        .populate([
+          { path: 'created_by', select: '-password' },
+          { path: 'specie_id' },
+        ])
         .lean()
 
       return {
         items: result,
       }
     } catch (err) {
-      console.log('AQUI', err)
       throw new BadRequestError('Bad request.')
     }
   }

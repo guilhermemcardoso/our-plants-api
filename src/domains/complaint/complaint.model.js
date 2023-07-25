@@ -31,10 +31,11 @@ export default class Complaint {
         ...data,
       }).save()
 
-      newData = await newData
-        .populate({ path: 'plant_id' })
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'evaluated_by', select: '-password' })
+      newData = await newData.populate([
+        { path: 'plant_id' },
+        { path: 'created_by', select: '-password' },
+        { path: 'evaluated_by', select: '-password' },
+      ])
       return newData.toObject()
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -53,10 +54,11 @@ export default class Complaint {
       const result = await ComplaintModel.findOne({
         _id: id,
         ...filters,
-      })
-        .populate({ path: 'plant_id' })
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'evaluated_by', select: '-password' })
+      }).populate([
+        { path: 'created_by', select: '-password' },
+        { path: 'plant_id' },
+        { path: 'evaluated_by', select: '-password' },
+      ])
 
       return result
     } catch (err) {
@@ -72,10 +74,11 @@ export default class Complaint {
         {
           new: true,
         }
-      )
-        .populate({ path: 'plant_id' })
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'evaluated_by', select: '-password' })
+      ).populate([
+        { path: 'plant_id' },
+        { path: 'created_by', select: '-password' },
+        { path: 'evaluated_by', select: '-password' },
+      ])
       return updatedData
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -114,9 +117,11 @@ export default class Complaint {
       })
         .limit(perPage)
         .skip((page - 1) * perPage)
-        .populate({ path: 'plant_id' })
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'evaluated_by', select: '-password' })
+        .populate([
+          { path: 'plant_id' },
+          { path: 'created_by', select: '-password' },
+          { path: 'evaluated_by', select: '-password' },
+        ])
         .lean()
 
       const count = await ComplaintModel.countDocuments({
@@ -145,9 +150,11 @@ export default class Complaint {
       })
         .limit(perPage)
         .skip((page - 1) * perPage)
-        .populate({ path: 'plant_id' })
-        .populate({ path: 'created_by', select: '-password' })
-        .populate({ path: 'evaluated_by', select: '-password' })
+        .populate([
+          { path: 'plant_id' },
+          { path: 'created_by', select: '-password' },
+          { path: 'evaluated_by', select: '-password' },
+        ])
         .lean()
 
       const count = await ComplaintModel.countDocuments({
