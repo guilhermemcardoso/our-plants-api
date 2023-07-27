@@ -32,7 +32,13 @@ export default class Favorite {
         options
       )
 
-      favorites = await favorites.populate('plants')
+      favorites = await favorites.populate({
+        path: 'plants',
+        populate: [
+          { path: 'created_by', select: '-password' },
+          { path: 'specie_id' },
+        ],
+      })
       return favorites.toObject()
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -56,7 +62,13 @@ export default class Favorite {
         options
       )
 
-      favorites = await favorites.populate('plants')
+      favorites = await favorites.populate({
+        path: 'plants',
+        populate: [
+          { path: 'created_by', select: '-password' },
+          { path: 'specie_id' },
+        ],
+      })
       return favorites.toObject()
     } catch (err) {
       throw new BadRequestError('Bad request.')
@@ -68,7 +80,13 @@ export default class Favorite {
       const result = await FavoriteModel.findOne({
         user_id: userId,
       })
-        .populate('plants')
+        .populate({
+          path: 'plants',
+          populate: [
+            { path: 'created_by', select: '-password' },
+            { path: 'specie_id' },
+          ],
+        })
         .lean()
       return result
     } catch (err) {
