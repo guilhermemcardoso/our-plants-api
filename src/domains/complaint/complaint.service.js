@@ -77,15 +77,21 @@ export default class ComplaintService {
     return complaint
   }
 
-  static async getComplaints({ userId, page, perPage, open, closed }) {
+  static async getComplaints({ userId, page, perPage, opened, closed }) {
     let closedQuery = null
-    if (!open && !closed) {
-      return []
+    if (opened === 'false' && closed === 'false') {
+      return {
+        items: [],
+        total_items: 0,
+        page: page,
+        hasNext: false,
+        hasPrevious: false,
+      }
     }
-    if (open && !closed) {
+    if (opened === 'true' && closed === 'false') {
       closedQuery = { closed: false }
     }
-    if (!open && closed) {
+    if (opened === 'false' && closed === 'true') {
       closedQuery = { closed: true }
     }
 
@@ -94,20 +100,25 @@ export default class ComplaintService {
       ...closedQuery,
     }
 
-    const complaints = await Complaint.list({ userId, page, perPage, filters })
+    const complaints = await Complaint.list({
+      userId,
+      page: Number(page),
+      perPage: Number(perPage),
+      filters,
+    })
 
     return complaints
   }
 
-  static async getMyComplaints({ userId, page, perPage, closed, open }) {
+  static async getMyComplaints({ userId, page, perPage, closed, opened }) {
     let closedQuery = null
-    if (!open && !closed) {
+    if (opened === 'false' && closed === 'false') {
       return []
     }
-    if (open && !closed) {
+    if (opened === 'true' && closed === 'false') {
       closedQuery = { closed: false }
     }
-    if (!open && closed) {
+    if (opened === 'false' && closed === 'true') {
       closedQuery = { closed: true }
     }
 
@@ -118,8 +129,8 @@ export default class ComplaintService {
 
     const complaints = await Complaint.myList({
       userId,
-      page,
-      perPage,
+      page: Number(page),
+      perPage: Number(perPage),
       filters,
     })
 
