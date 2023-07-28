@@ -113,7 +113,13 @@ export default class ComplaintService {
   static async getMyComplaints({ userId, page, perPage, closed, opened }) {
     let closedQuery = null
     if (opened === 'false' && closed === 'false') {
-      return []
+      return {
+        items: [],
+        total_items: 0,
+        page: page,
+        hasNext: false,
+        hasPrevious: false,
+      }
     }
     if (opened === 'true' && closed === 'false') {
       closedQuery = { closed: false }

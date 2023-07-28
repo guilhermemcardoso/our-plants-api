@@ -32,9 +32,14 @@ export default class Complaint {
       }).save()
 
       newData = await newData.populate([
-        { path: 'plant_id' },
+        {
+          path: 'plant_id',
+          populate: [
+            { path: 'created_by', select: '-password' },
+            { path: 'specie_id' },
+          ],
+        },
         { path: 'created_by', select: '-password' },
-        { path: 'evaluated_by', select: '-password' },
       ])
       return newData.toObject()
     } catch (err) {
@@ -55,9 +60,14 @@ export default class Complaint {
         _id: id,
         ...filters,
       }).populate([
+        {
+          path: 'plant_id',
+          populate: [
+            { path: 'created_by', select: '-password' },
+            { path: 'specie_id' },
+          ],
+        },
         { path: 'created_by', select: '-password' },
-        { path: 'plant_id' },
-        { path: 'evaluated_by', select: '-password' },
       ])
 
       return result
@@ -75,9 +85,14 @@ export default class Complaint {
           new: true,
         }
       ).populate([
-        { path: 'plant_id' },
+        {
+          path: 'plant_id',
+          populate: [
+            { path: 'created_by', select: '-password' },
+            { path: 'specie_id' },
+          ],
+        },
         { path: 'created_by', select: '-password' },
-        { path: 'evaluated_by', select: '-password' },
       ])
       return updatedData
     } catch (err) {
@@ -118,9 +133,14 @@ export default class Complaint {
         .limit(perPage)
         .skip((page - 1) * perPage)
         .populate([
-          { path: 'plant_id' },
+          {
+            path: 'plant_id',
+            populate: [
+              { path: 'created_by', select: '-password' },
+              { path: 'specie_id' },
+            ],
+          },
           { path: 'created_by', select: '-password' },
-          { path: 'evaluated_by', select: '-password' },
         ])
         .lean()
 
@@ -151,9 +171,14 @@ export default class Complaint {
         .limit(perPage)
         .skip((page - 1) * perPage)
         .populate([
-          { path: 'plant_id' },
+          {
+            path: 'plant_id',
+            populate: [
+              { path: 'created_by', select: '-password' },
+              { path: 'specie_id' },
+            ],
+          },
           { path: 'created_by', select: '-password' },
-          { path: 'evaluated_by', select: '-password' },
         ])
         .lean()
 
