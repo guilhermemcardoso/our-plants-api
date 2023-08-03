@@ -44,7 +44,6 @@ export default class Plant {
         ...data,
       }).save()
 
-      console.log('newData', newData)
       newData = await newData.populate([
         { path: 'created_by', select: '-password' },
         { path: 'specie_id' },
@@ -80,7 +79,6 @@ export default class Plant {
       ])
       return updatedData
     } catch (err) {
-      console.log('AQUI', err)
       throw new BadRequestError('Bad request.')
     }
   }

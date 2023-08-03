@@ -149,7 +149,7 @@ export default class Complaint {
         ...filters,
       })
 
-      const hasNext = (page - 1) * perPage + result.length > count
+      const hasNext = (page - 1) * perPage + result.length < count
       return {
         items: result,
         total_items: count,
@@ -164,6 +164,7 @@ export default class Complaint {
 
   static async myList({ userId, page, perPage, filters }) {
     try {
+      console.log('PER PAGE', perPage)
       const result = await ComplaintModel.find({
         created_by: new ObjectId(userId),
         ...filters,
@@ -183,11 +184,11 @@ export default class Complaint {
         .lean()
 
       const count = await ComplaintModel.countDocuments({
-        created_by: { $ne: new ObjectId(userId) },
+        created_by: new ObjectId(userId),
         ...filters,
       })
 
-      const hasNext = (page - 1) * perPage + result.length > count
+      const hasNext = (page - 1) * perPage + result.length < count
       return {
         items: result,
         total_items: count,
