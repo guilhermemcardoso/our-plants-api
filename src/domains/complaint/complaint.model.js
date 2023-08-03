@@ -164,7 +164,6 @@ export default class Complaint {
 
   static async myList({ userId, page, perPage, filters }) {
     try {
-      console.log('PER PAGE', perPage)
       const result = await ComplaintModel.find({
         created_by: new ObjectId(userId),
         ...filters,
