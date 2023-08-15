@@ -93,6 +93,7 @@ export default class Complaint {
           ],
         },
         { path: 'created_by', select: '-password' },
+        { path: 'evaluated_by', select: '-password' },
       ])
       return updatedData
     } catch (err) {
