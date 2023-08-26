@@ -1,8 +1,14 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
 import nodemailer from 'nodemailer'
 import handlebars from 'handlebars'
 import { readTemplate } from './utils.js'
 import { EmailTemplates } from './constants.js'
 import { generateJwt, JwtTokenType } from '../../services/jwt.js'
+
+const __filename = fileURLToPath(import.meta.url)
+
+const __dirname = path.dirname(__filename)
 
 export default class MailService {
   static getInstance() {
@@ -47,10 +53,17 @@ export default class MailService {
       url,
     })
     const data = {
-      from: process.env.MAIL_FROM,
+      from: 'Nossas Plantas',
       to: user.email,
-      subject: 'Welcome to Nice App! Confirm your Email',
+      subject: 'Nossas Plantas - Confirmação de email',
       html: htmlToSend,
+      attachments: [
+        {
+          filename: 'nossas_plantas_logo.png',
+          path: __dirname + '/assets/nossas_plantas_logo.png',
+          cid: 'logo',
+        },
+      ],
     }
     await new Promise((resolve, reject) => {
       transporter.sendMail(data, (err, info) => {
@@ -86,11 +99,59 @@ export default class MailService {
       url,
     })
     const data = {
-      from: process.env.MAIL_FROM,
+      from: 'Nossas Plantas',
       to: user.email,
       subject:
-        'Welcome to Nice App! Click on the link to access the password recovery',
+        'Nossas Plantas - Alteração de senha',
       html: htmlToSend,
+      attachments: [
+        {
+          filename: 'nossas_plantas_logo.png',
+          path: __dirname + '/assets/nossas_plantas_logo.png',
+          cid: 'logo',
+        },
+      ],
+    }
+    await new Promise((resolve, reject) => {
+      transporter.sendMail(data, (err, info) => {
+        if (err) {
+          reject()
+        }
+        resolve()
+      })
+    })
+  }
+
+  static async sendTestMail(templateName = 'confirmation', email) {
+    const transporter = this.getInstance()
+
+    const url =
+      templateName === 'confirmation'
+        ? `${process.env.MAIL_LINK_URL}/email-confirmation/TOKEN1234`
+        : `${process.env.MAIL_LINK_URL}/password-recovery/TOKEN1234`
+
+    const emailTemplateSource =
+      templateName === 'confirmation'
+        ? readTemplate(EmailTemplates.EMAIL_CONFIRMATION)
+        : readTemplate(EmailTemplates.PASSWORD_RECOVERY)
+
+    const template = handlebars.compile(emailTemplateSource)
+    const htmlToSend = template({
+      name: 'John Doe',
+      url,
+    })
+    const data = {
+      from: 'Nossas Plantas',
+      to: email,
+      subject: templateName === 'confirmation' ? 'Nossas Plantas - Confirmação de email' : 'Nossas Plantas - Alteração de senha',
+      html: htmlToSend,
+      attachments: [
+        {
+          filename: 'nossas_plantas_logo.png',
+          path: __dirname + '/assets/nossas_plantas_logo.png',
+          cid: 'logo',
+        },
+      ],
     }
     await new Promise((resolve, reject) => {
       transporter.sendMail(data, (err, info) => {
