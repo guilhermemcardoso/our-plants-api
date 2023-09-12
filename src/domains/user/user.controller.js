@@ -148,6 +148,17 @@ async function updateCurrentUser(req, res) {
       }
     }
 
+    if (!user.completed_profile) {
+      const nowIsCompleted = await UserService.checkProfileCompleted(user)
+      if (nowIsCompleted) {
+        const updatedUser = await GamificationService.gamifyUserAction({
+          user,
+          action: GamifiedUserAction.COMPLETE_PROFILE,
+        })
+        return successRes(res, updatedUser, 200)
+      }
+    }
+
     if (user) {
       return successRes(res, user, 200)
     }
