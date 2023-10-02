@@ -6,7 +6,10 @@ import logger from 'morgan'
 import helmet from 'helmet/index.cjs'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import rateLimit from 'express-rate-limit'
+// NOTE: use this import for dev
+import rateLimit from 'express-rate-limit/dist/index.cjs'
+// NOTE: use this import for prod
+// import rateLimit from 'express-rate-limit'
 import server from './src/server.js'
 import { notFound } from './src/common/responses.js'
 import { connect as mongoConnect } from './src/services/mongodb.js'
