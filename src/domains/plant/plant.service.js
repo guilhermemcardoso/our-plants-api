@@ -29,10 +29,9 @@ export default class PlantService {
       throw new ForbiddenError('Forbidden.')
     }
 
-    const isAuthor = plant.created_by === userId
+    const isAuthor = plant.created_by._id.toString() === userId
     const userIsAdmin = user.score.level >= ADMIN_LEVEL
-
-    if (!isAuthor || !userIsAdmin) {
+    if (!isAuthor && !userIsAdmin) {
       throw new ForbiddenError('Forbidden.')
     }
 
