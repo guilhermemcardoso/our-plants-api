@@ -32,7 +32,7 @@ export default class SpecieService {
     const isAuthor = specie.created_by === userId
     const userIsAdmin = user.score.level === ADMIN_LEVEL
 
-    if (!isAuthor && !userIsAdmin) {
+    if (!isAuthor || !userIsAdmin) {
       throw new ForbiddenError('Forbidden.')
     }
 
