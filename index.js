@@ -1,6 +1,9 @@
 import express from 'express'
 import logger from 'morgan'
-import helmet from 'helmet'
+// NOTE: use this import for dev
+// import helmet from 'helmet'
+// NOTE: use this import for prod
+import helmet from 'helmet/index.cjs'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import rateLimit from 'express-rate-limit'
